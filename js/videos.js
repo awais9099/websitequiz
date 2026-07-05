@@ -154,6 +154,65 @@ saveChangePw.addEventListener('click', async () => {
   }
 });
 
+let allTeacherGroups = [];
+let currentLevelFilter = 'all';
+
+async function renderTeacherGroups(filter) {
+  const container = document.getElementById('sectionsContainer');
+  const empty = document.getElementById('videosEmpty');
+  const filtered = filter === 'all' ? allTeacherGroups : allTeacherGroups.filter(g => g.level === filter);
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = '';
+  for (const g of filtered) {
+    const sections = await getSections(g.id);
+    if (sections.length === 0) continue;
+    const sorted = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+    let sectionsHtml = '';
+    for (const sec of sorted) {
+      const videos = await getVideos(sec.id);
+      const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
+      sectionsHtml += `
+        <div class="video-section-card">
+          <div class="video-section-header"><h3><i class="fas fa-book-open"></i> ${sec.title}</h3></div>
+          <div class="video-section-body">
+            ${sortedVideos.map(v => {
+              const embedUrl = getEmbedUrl(v.url);
+              const topicsHtml = v.topics ? `<div class="video-viewer-topics"><i class="fas fa-tags"></i> ${v.topics}</div>` : '';
+              const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Notes</a>` : '';
+              return `
+                <div class="video-viewer-card">
+                  ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-viewer-thumb" onerror="this.style.display='none'">` : ''}
+                  <div class="video-viewer-info">
+                    <h4>${v.title}</h4>
+                    ${topicsHtml}
+                    ${v.description ? `<p class="video-viewer-desc">${v.description}</p>` : ''}
+                    <div class="video-viewer-actions">
+                      ${embedUrl ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${embedUrl}','${v.title.replace(/'/g, "\\'")}')"><i class="fas fa-play"></i> Watch</button>` : ''}
+                      ${notesHtml}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+    const badgeClass = g.level === 'patente' ? 'badge-patente' : `badge-${g.level.toLowerCase()}`;
+    container.innerHTML += `
+      <div class="video-group-section">
+        <h2 style="margin-bottom:1rem;"><span class="course-badge ${badgeClass}">${g.level}</span> ${g.name}</h2>
+        ${sectionsHtml}
+      </div>
+    `;
+  }
+}
+
 // AUTH
 initFirebase().then(() => {
   onAuthStateChanged(async (user) => {
@@ -169,68 +228,32 @@ initFirebase().then(() => {
       document.getElementById('navManageLink').style.display = 'block';
       document.getElementById('studentNameDisplay').textContent = profile.name || 'Teacher';
       document.getElementById('pendingNameDisplay').textContent = profile.name || 'Teacher';
+      document.getElementById('groupNameDisplay').textContent = 'All Groups';
+      document.getElementById('groupLevelDisplay').textContent = 'Showing all available videos';
       showSection('videosContent');
-      const group = await getGroups();
-      if (group.length > 0) {
-        document.getElementById('groupNameDisplay').textContent = 'All Groups';
-        document.getElementById('groupLevelDisplay').textContent = 'Showing all available videos';
-        const container = document.getElementById('sectionsContainer');
-        container.innerHTML = '';
-        for (const g of group) {
-          const sections = await getSections(g.id);
-          if (sections.length === 0) continue;
-          const sorted = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
-          let sectionsHtml = '';
-          for (const sec of sorted) {
-            const videos = await getVideos(sec.id);
-            const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
-            sectionsHtml += `
-              <div class="video-section-card">
-                <div class="video-section-header"><h3><i class="fas fa-book-open"></i> ${sec.title}</h3></div>
-                <div class="video-section-body">
-                  ${sortedVideos.map(v => {
-                    const embedUrl = getEmbedUrl(v.url);
-                    const topicsHtml = v.topics ? `<div class="video-viewer-topics"><i class="fas fa-tags"></i> ${v.topics}</div>` : '';
-                    const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Notes</a>` : '';
-                    return `
-                      <div class="video-viewer-card">
-                        ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-viewer-thumb" onerror="this.style.display='none'">` : ''}
-                        <div class="video-viewer-info">
-                          <h4>${v.title}</h4>
-                          ${topicsHtml}
-                          ${v.description ? `<p class="video-viewer-desc">${v.description}</p>` : ''}
-                          <div class="video-viewer-actions">
-                            ${embedUrl ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${embedUrl}','${v.title.replace(/'/g, "\\'")}')"><i class="fas fa-play"></i> Watch</button>` : ''}
-                            ${notesHtml}
-                          </div>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-            `;
-          }
-          const badgeClass = g.level === 'patente' ? 'badge-patente' : `badge-${g.level.toLowerCase()}`;
-          container.innerHTML += `
-            <div class="video-group-section">
-              <h2 style="margin-bottom:1rem;"><span class="course-badge ${badgeClass}">${g.level}</span> ${g.name}</h2>
-              ${sectionsHtml}
-            </div>
-          `;
-        }
-      }
+      allTeacherGroups = await getGroups();
+      await renderTeacherGroups('all');
+      document.querySelectorAll('#videoLevelTabs .filter-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          document.querySelectorAll('#videoLevelTabs .filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentLevelFilter = btn.dataset.filter;
+          await renderTeacherGroups(currentLevelFilter);
+        });
+      });
       return;
     }
 
     if (!profile || !profile.isActive) {
       document.getElementById('pendingNameDisplay').textContent = profile ? (profile.name || user.email) : user.email;
+      document.getElementById('videoLevelTabs').style.display = 'none';
       showSection('notActive');
       return;
     }
 
     document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
     document.getElementById('pendingNameDisplay').textContent = profile.name || user.email;
+    document.getElementById('videoLevelTabs').style.display = 'none';
 
     if (profile.groupId) {
       const group = await getGroup(profile.groupId);
