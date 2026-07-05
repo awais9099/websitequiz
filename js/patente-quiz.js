@@ -154,6 +154,7 @@ function renderQuestion() {
   document.getElementById('examQNum').textContent = currentIndex + 1;
   document.getElementById('examQText').textContent = q.text;
   document.getElementById('examTranslation').style.display = 'none';
+  currentTranslationLang = null;
 
   const tabIdx = getTabIndex(currentIndex);
   const tabs = document.querySelectorAll('.exam-tab');
@@ -283,6 +284,7 @@ function retryQuiz() {
 }
 
 const translationCache = {};
+let currentTranslationLang = null;
 
 async function translateQuestion(lang) {
   const q = currentQuestions[currentIndex];
@@ -291,10 +293,11 @@ async function translateQuestion(lang) {
   el.style.display = 'block';
   el.className = 'exam-translation exam-translation-loading';
   el.textContent = 'Translating...';
+  currentTranslationLang = lang;
 
   if (translationCache[cacheKey]) {
     el.className = 'exam-translation';
-    el.textContent = translationCache[cacheKey];
+    el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
     return;
   }
 
@@ -305,7 +308,7 @@ async function translateQuestion(lang) {
     const translated = data[0].map(s => s[0]).join('');
     translationCache[cacheKey] = translated;
     el.className = 'exam-translation';
-    el.textContent = translated;
+    el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
   } catch (err) {
     el.className = 'exam-translation';
     el.textContent = 'Translation failed. Please try again.';
@@ -314,6 +317,7 @@ async function translateQuestion(lang) {
 
 function hideTranslation() {
   document.getElementById('examTranslation').style.display = 'none';
+  currentTranslationLang = null;
 }
 
 function readQuestion() {
@@ -323,18 +327,25 @@ function readQuestion() {
     const utter = new SpeechSynthesisUtterance(q.text);
     utter.lang = 'it-IT';
     utter.rate = 0.9;
-    utter.onstart = () => {
-      document.getElementById('examTranslation').style.display = 'block';
-      document.getElementById('examTranslation').className = 'exam-translation exam-translation-loading';
-      document.getElementById('examTranslation').innerHTML = '<i class="fas fa-volume-up"></i> Reading...';
-    };
-    utter.onend = () => {
-      document.getElementById('examTranslation').className = 'exam-translation';
-      document.getElementById('examTranslation').innerHTML = '<i class="fas fa-volume-up"></i> ' + q.text;
-    };
     window.speechSynthesis.speak(utter);
   } else {
     alert('Text-to-speech is not supported in your browser.');
+  }
+}
+
+function readTranslation() {
+  if (!currentTranslationLang) return;
+  const q = currentQuestions[currentIndex];
+  const cacheKey = q.text + '_' + currentTranslationLang;
+  const text = translationCache[cacheKey];
+  if (!text) return;
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = currentTranslationLang === 'ur' ? 'ur-PK' : 'en-US';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
   }
 }
 
