@@ -72,6 +72,11 @@
     .review-item { padding: 0.6rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; border-left: 4px solid; }
     .review-item.correct { background: #eafaf1; border-color: #27ae60; }
     .review-item.wrong { background: #fdedec; border-color: #e74c3c; }
+    .exam-translate-bar { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .exam-translate-btn { padding: 0.35rem 0.75rem; border: 1px solid #b5c9a0; border-radius: 4px; background: #f5f7f2; color: #2d5016; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+    .exam-translate-btn:hover { background: #2d5016; color: white; border-color: #2d5016; }
+    .exam-translation { margin-top: 0.75rem; padding: 0.75rem; background: #fffde7; border: 1px solid #f0e68c; border-radius: 6px; font-size: 0.9rem; color: #333; line-height: 1.6; }
+    .exam-translation-loading { color: #999; font-style: italic; }
     @media (max-width: 768px) {
       .exam-body { flex-direction: column; }
       .exam-image-area { width: 100%; height: 100px; border-right: none; border-bottom: 1px solid #b5c9a0; }
@@ -143,6 +148,12 @@
         <div class="exam-question-area">
           <div class="exam-question-number" id="examQNum">1</div>
           <div class="exam-question-text" id="examQText"></div>
+          <div class="exam-translate-bar">
+            <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
+            <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
+            <button class="exam-translate-btn" onclick="hideTranslation()"><i class="fas fa-times"></i> Hide</button>
+          </div>
+          <div class="exam-translation" id="examTranslation" style="display:none;"></div>
         </div>
       </div>
 

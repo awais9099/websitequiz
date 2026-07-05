@@ -153,6 +153,7 @@ function renderQuestion() {
   const q = currentQuestions[currentIndex];
   document.getElementById('examQNum').textContent = currentIndex + 1;
   document.getElementById('examQText').textContent = q.text;
+  document.getElementById('examTranslation').style.display = 'none';
 
   const tabIdx = getTabIndex(currentIndex);
   const tabs = document.querySelectorAll('.exam-tab');
@@ -279,6 +280,40 @@ function closeResults() {
 function retryQuiz() {
   closeResults();
   startQuiz(currentQuizId);
+}
+
+const translationCache = {};
+
+async function translateQuestion(lang) {
+  const q = currentQuestions[currentIndex];
+  const cacheKey = q.text + '_' + lang;
+  const el = document.getElementById('examTranslation');
+  el.style.display = 'block';
+  el.className = 'exam-translation exam-translation-loading';
+  el.textContent = 'Translating...';
+
+  if (translationCache[cacheKey]) {
+    el.className = 'exam-translation';
+    el.textContent = translationCache[cacheKey];
+    return;
+  }
+
+  try {
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=it&tl=' + lang + '&dt=t&q=' + encodeURIComponent(q.text);
+    const res = await fetch(url);
+    const data = await res.json();
+    const translated = data[0].map(s => s[0]).join('');
+    translationCache[cacheKey] = translated;
+    el.className = 'exam-translation';
+    el.textContent = translated;
+  } catch (err) {
+    el.className = 'exam-translation';
+    el.textContent = 'Translation failed. Please try again.';
+  }
+}
+
+function hideTranslation() {
+  document.getElementById('examTranslation').style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', loadQuizList);
