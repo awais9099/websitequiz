@@ -116,6 +116,8 @@ function renderGrid() {
         } else {
           cls = 'answered';
         }
+      } else if (quizSubmitted) {
+        cls = 'wrong';
       }
       return '<div class="exam-dot ' + cls + '" onclick="goToQuestion(' + i + ')">' + (i + 1) + '</div>';
     }).join('');
@@ -178,7 +180,7 @@ function renderQuestion() {
   document.getElementById('examNextBtn').disabled = currentIndex === totalQuestionsInQuiz - 1;
 
   const answeredCount = Object.keys(userAnswers).length;
-  document.getElementById('examCorreggiBtn').disabled = answeredCount < totalQuestionsInQuiz;
+  document.getElementById('examCorreggiBtn').disabled = answeredCount < 1;
 
   renderGrid();
 }
@@ -237,6 +239,14 @@ function updateTimerDisplay() {
 
 function correggi() {
   if (quizSubmitted) return;
+
+  const answeredCount = Object.keys(userAnswers).length;
+  if (answeredCount < totalQuestionsInQuiz) {
+    const unanswered = totalQuestionsInQuiz - answeredCount;
+    if (!confirm('Hai ' + unanswered + ' domand' + (unanswered === 1 ? 'a' : 'e') + ' senza risposta. Le domande senza risposta saranno segnate come sbagliate. Continuare?')) {
+      return;
+    }
+  }
   quizSubmitted = true;
   clearInterval(timerInterval);
 
