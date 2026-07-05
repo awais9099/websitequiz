@@ -259,16 +259,69 @@ initFirebase().then(() => {
     document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
     document.getElementById('pendingNameDisplay').textContent = profile.name || user.email;
 
-    if (profile.groupId) {
-      const group = await getGroup(profile.groupId);
-      if (group) {
-        document.getElementById('groupNameDisplay').textContent = group.name;
-        document.getElementById('groupLevelDisplay').textContent = `${group.level} Course`;
-        document.title = `${group.name} - Video Lessons`;
-      }
+    const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
+    if (groupIds.length > 0) {
       showSection('videosContent');
       document.getElementById('videoLevelTabs').style.display = 'none';
-      await renderGroupVideos(profile.groupId);
+      const container = document.getElementById('sectionsContainer');
+      container.innerHTML = '';
+      for (const gid of groupIds) {
+        const group = await getGroup(gid);
+        if (!group) continue;
+        const sections = await getSections(gid);
+        if (sections.length === 0) continue;
+        const sorted = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+        let sectionsHtml = '';
+        for (const sec of sorted) {
+          const videos = await getVideos(sec.id);
+          const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
+          sectionsHtml += `
+            <div class="video-section-card">
+              <div class="video-section-header"><h3><i class="fas fa-book-open"></i> ${sec.title}</h3></div>
+              <div class="video-section-body">
+                ${sortedVideos.map(v => {
+                  const embedUrl = getEmbedUrl(v.url);
+                  const topicsHtml = v.topics ? `<div class="video-viewer-topics"><i class="fas fa-tags"></i> ${v.topics}</div>` : '';
+                  const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Notes</a>` : '';
+                  return `
+                    <div class="video-viewer-card">
+                      ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-viewer-thumb" onerror="this.style.display='none'">` : ''}
+                      <div class="video-viewer-info">
+                        <h4>${v.title}</h4>
+                        ${topicsHtml}
+                        ${v.description ? `<p class="video-viewer-desc">${v.description}</p>` : ''}
+                        <div class="video-viewer-actions">
+                          ${embedUrl ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${embedUrl}','${v.title.replace(/'/g, "\\'")}')"><i class="fas fa-play"></i> Watch</button>` : ''}
+                          ${notesHtml}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+        const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
+        container.innerHTML += `
+          <div class="video-group-section">
+            <h2 style="margin-bottom:1rem;"><span class="course-badge ${badgeClass}">${group.level}</span> ${group.name}</h2>
+            ${sectionsHtml}
+          </div>
+        `;
+      }
+      if (groupIds.length === 1) {
+        const g = await getGroup(groupIds[0]);
+        if (g) {
+          document.getElementById('groupNameDisplay').textContent = g.name;
+          document.getElementById('groupLevelDisplay').textContent = `${g.level} Course`;
+          document.title = `${g.name} - Video Lessons`;
+        }
+      } else {
+        document.getElementById('groupNameDisplay').textContent = `${groupIds.length} Courses`;
+        document.getElementById('groupLevelDisplay').textContent = 'Your enrolled courses';
+        document.title = 'My Courses - Video Lessons';
+      }
     } else {
       document.getElementById('groupNameDisplay').textContent = 'Video Lessons';
       document.getElementById('groupLevelDisplay').textContent = 'No group assigned. Please contact your teacher.';

@@ -64,14 +64,18 @@ async function loadStudents() {
     }
     noStudents.style.display = 'none';
     tbody.innerHTML = studentList.map(s => {
-      const group = allGroups.find(g => g.id === s.groupId);
+      const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+      const groupNames = groupIds.map(gid => {
+        const g = allGroups.find(gr => gr.id === gid);
+        return g ? g.name : null;
+      }).filter(Boolean);
       return `
       <tr>
         <td><strong>${s.name || 'N/A'}</strong></td>
         <td>${s.email || 'N/A'}</td>
         <td>${s.phone || 'N/A'}</td>
         <td>${s.level ? `<span class="course-badge badge-${s.level === 'patente' ? 'patente' : s.level.toLowerCase()}">${s.level}</span>` : '<span style="color:var(--text-light);">Not set</span>'}</td>
-        <td>${group ? `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);">${group.name}</span>` : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
+        <td>${groupNames.length > 0 ? groupNames.map(n => `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);display:block;">${n}</span>`).join('') : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
         <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
         <td class="actions">
           <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
@@ -92,12 +96,10 @@ async function loadStudents() {
 
 function populateGroupSelect() {
   const select = document.getElementById('sGroup');
-  const current = select.value;
-  select.innerHTML = '<option value="">No group</option>';
+  select.innerHTML = '';
   allGroups.forEach(g => {
     select.innerHTML += `<option value="${g.id}">${g.name}</option>`;
   });
-  select.value = current;
 }
 
 function openStudentModal(title) {
@@ -108,13 +110,14 @@ function openStudentModal(title) {
 function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
   editingStudentUid = null;
-  ['sName','sEmail','sPhone','sLevel','sGroup','sActive'].forEach(id => {
+  ['sName','sEmail','sPhone','sLevel','sActive'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (el.tagName === 'SELECT') el.selectedIndex = 0;
       else el.value = '';
     }
   });
+  document.getElementById('sGroup').selectedIndex = -1;
   document.getElementById('sEmail').disabled = false;
 }
 
@@ -127,8 +130,12 @@ async function editStudent(uid) {
   document.getElementById('sEmail').disabled = true;
   document.getElementById('sPhone').value = profile.phone || '';
   document.getElementById('sLevel').value = profile.level || '';
-  document.getElementById('sGroup').value = profile.groupId || '';
   document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
+  const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
+  const groupSelect = document.getElementById('sGroup');
+  for (const opt of groupSelect.options) {
+    opt.selected = groupIds.includes(opt.value);
+  }
   openStudentModal('Edit Student');
 }
 
@@ -137,13 +144,14 @@ async function saveStudent() {
   const email = document.getElementById('sEmail').value.trim();
   const phone = document.getElementById('sPhone').value.trim();
   const level = document.getElementById('sLevel').value;
-  const groupId = document.getElementById('sGroup').value;
+  const groupSelect = document.getElementById('sGroup');
+  const groupIds = Array.from(groupSelect.selectedOptions).map(opt => opt.value);
   const isActive = document.getElementById('sActive').value === 'true';
 
   if (!name) { showToast('Enter a name', 'error'); return; }
 
   if (editingStudentUid) {
-    const updateData = { name, phone, level, groupId, isActive };
+    const updateData = { name, phone, level, groupIds, isActive };
     await updateStudentProfile(editingStudentUid, updateData);
     showToast('Student updated');
   } else {
@@ -151,7 +159,7 @@ async function saveStudent() {
     try {
       const docId = 'pending_' + email.replace(/[@.]/g, '_');
       await createStudentProfile(docId, {
-        name, email, phone, level, groupId, isActive,
+        name, email, phone, level, groupIds, isActive,
         role: 'student',
         isPending: true,
         createdAt: new Date().toISOString()
