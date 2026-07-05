@@ -104,6 +104,7 @@
           <div class="videos-filters" id="patenteTricksTab" style="display:none;margin-top:0.75rem;">
             <button class="filter-btn active" data-tab="videos" onclick="showVideosTab('videos')"><i class="fas fa-play-circle"></i> Videos</button>
             <button class="filter-btn" data-tab="tricks" onclick="showVideosTab('tricks')"><i class="fas fa-lightbulb"></i> Patente Tricks</button>
+            <a href="patente-quiz.html" class="filter-btn" style="text-decoration:none;"><i class="fas fa-clipboard-check"></i> Patente Quiz</a>
           </div>
         </div>
       </div>
@@ -115,6 +116,11 @@
             <input type="text" id="trickSearchStudent" placeholder="Search tricks by word..." style="width:100%;max-width:400px;padding:0.6rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:0.9rem;">
           </div>
           <div id="tricksContainerStudent"></div>
+          <div class="tricks-pagination" id="tricksPaginationStudent" style="display:none;">
+            <button class="btn btn-outline btn-sm" id="tricksPrevStudent" onclick="studentTricksPrev()"><i class="fas fa-chevron-left"></i> Back</button>
+            <span id="tricksPageInfoStudent">Page 1 of 1</span>
+            <button class="btn btn-outline btn-sm" id="tricksNextStudent" onclick="studentTricksNext()">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
           <div id="noTricksStudent" style="display:none;text-align:center;color:var(--text-light);padding:2rem;">
             <i class="fas fa-lightbulb" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
             <p>No tricks available yet.</p>

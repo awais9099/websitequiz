@@ -46,6 +46,7 @@ TABS.forEach(tab => {
     if (tab.dataset.tab === 'students') loadStudents();
     if (tab.dataset.tab === 'groups') loadGroups();
     if (tab.dataset.tab === 'tricks') loadTricks();
+    if (tab.dataset.tab === 'patenteQuiz') loadPatenteQuizzes();
   });
 });
 
@@ -747,3 +748,72 @@ document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click
 loadQuestionsFromStorage();
 renderQuestions();
 loadSettings();
+
+// ===== PATENTE QUIZ IMPORT =====
+let parsedQuizzes = [];
+
+function parseAndPreview() {
+  const text = document.getElementById('docxPasteArea').value.trim();
+  if (!text) {
+    showToast('Please paste the DOCX content first', 'error');
+    return;
+  }
+  parsedQuizzes = parsePatenteText(text);
+  if (parsedQuizzes.length === 0) {
+    showToast('No quizzes found. Check the format.', 'error');
+    return;
+  }
+  parsedQuizzes.forEach(q => q.id = 'pq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+  const totalQ = parsedQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
+  document.getElementById('previewCount').textContent = totalQ;
+  document.getElementById('previewQuizCount').textContent = parsedQuizzes.length;
+  const container = document.getElementById('importPreviewContent');
+  container.innerHTML = parsedQuizzes.map(q => `
+    <div style="margin-bottom:1.5rem;padding:1rem;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <strong style="color:var(--primary);">${q.title}</strong>
+        <span style="font-size:0.8rem;color:var(--text-light);">Blocco: ${q.blockNumber} | ${q.totalQuestions} questions</span>
+      </div>
+      <div style="font-size:0.85rem;">
+        <div style="margin-bottom:0.5rem;"><span style="color:var(--accent);font-weight:600;">VERE (${q.questions.filter(x => x.answer).length}):</span></div>
+        ${q.questions.filter(x => x.answer).map(x => `<div style="padding:0.2rem 0;color:var(--text);">• ${x.text}</div>`).join('')}
+        <div style="margin:0.5rem 0 0.5rem;"><span style="color:var(--danger);font-weight:600;">FALSE (${q.questions.filter(x => !x.answer).length}):</span></div>
+        ${q.questions.filter(x => !x.answer).map(x => `<div style="padding:0.2rem 0;color:var(--text);">• ${x.text}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('importPreview').style.display = 'block';
+}
+
+function saveImportedQuizzes() {
+  if (parsedQuizzes.length === 0) return;
+  addPatenteQuizzes(parsedQuizzes);
+  showToast(`Saved ${parsedQuizzes.length} quizzes (${parsedQuizzes.reduce((s, q) => s + q.questions.length, 0)} questions)`, 'success');
+  parsedQuizzes = [];
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('docxPasteArea').value = '';
+  loadPatenteQuizzes();
+}
+
+function loadPatenteQuizzes() {
+  const quizzes = getPatenteQuizzes();
+  const container = document.getElementById('importedQuizzesList');
+  const noQuizzes = document.getElementById('noImportedQuizzes');
+  document.getElementById('importedQuizCount').textContent = quizzes.length;
+  if (quizzes.length === 0) {
+    container.innerHTML = '';
+    noQuizzes.style.display = 'block';
+    return;
+  }
+  noQuizzes.style.display = 'none';
+  container.innerHTML = quizzes.map(q => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border-bottom:1px solid var(--border);">
+      <div>
+        <strong style="color:var(--primary);">${q.title}</strong>
+        <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">Blocco: ${q.blockNumber}</span>
+        <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">| ${q.totalQuestions} questions</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deletePatenteQuiz('${q.id}'); loadPatenteQuizzes();"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+}

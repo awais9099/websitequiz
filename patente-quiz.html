@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patente Quiz - Learn Italian with Iqra</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#1a5276">
+  <style>
+    .pq-container { max-width: 700px; margin: 0 auto; padding: 1rem; }
+    .pq-header { text-align: center; padding: 2rem 0 1rem; }
+    .pq-header h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 0.25rem; }
+    .pq-header p { color: var(--text-light); font-size: 0.9rem; }
+    .pq-progress { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .pq-progress .q-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: white; }
+    .pq-progress .q-dot.current { border-color: var(--primary); background: var(--primary); color: white; }
+    .pq-progress .q-dot.answered { border-color: var(--accent); background: var(--accent); color: white; }
+    .pq-progress .q-dot.wrong { border-color: var(--danger); background: var(--danger); color: white; }
+    .pq-question-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+    .pq-question-num { font-size: 0.8rem; font-weight: 700; color: var(--primary-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; }
+    .pq-question-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 1.5rem; color: var(--text); }
+    .pq-options { display: flex; gap: 1rem; }
+    .pq-option { flex: 1; padding: 1.25rem; border: 3px solid var(--border); border-radius: var(--radius); text-align: center; cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: all 0.2s; background: white; }
+    .pq-option:hover { border-color: var(--primary-light); background: #f0f7ff; }
+    .pq-option.selected-vero { border-color: var(--accent); background: #eafaf1; color: var(--accent); }
+    .pq-option.selected-falso { border-color: var(--danger); background: #fdedec; color: var(--danger); }
+    .pq-option.correct { border-color: var(--accent); background: #eafaf1; color: var(--accent); }
+    .pq-option.wrong { border-color: var(--danger); background: #fdedec; color: var(--danger); }
+    .pq-option.disabled { pointer-events: none; opacity: 0.7; }
+    .pq-nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .pq-nav .btn { min-height: 44px; }
+    .pq-info { font-size: 0.85rem; color: var(--text-light); text-align: center; }
+    .pq-results { text-align: center; padding: 2rem 0; }
+    .pq-score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid; }
+    .pq-score-circle.excellent { border-color: var(--accent); background: #eafaf1; }
+    .pq-score-circle.good { border-color: var(--primary-light); background: #ebf5fb; }
+    .pq-score-circle.average { border-color: var(--warning); background: #fef9e7; }
+    .pq-score-circle.poor { border-color: var(--danger); background: #fdedec; }
+    .pq-score-circle .score-num { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+    .pq-score-circle .score-label { font-size: 0.85rem; font-weight: 500; }
+    .pq-review { text-align: left; margin-top: 1.5rem; }
+    .pq-review-item { padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; font-size: 0.9rem; border-left: 4px solid; }
+    .pq-review-item.correct { background: #eafaf1; border-color: var(--accent); }
+    .pq-review-item.wrong { background: #fdedec; border-color: var(--danger); }
+    .pq-quiz-list { display: grid; gap: 1rem; }
+    .pq-quiz-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .pq-quiz-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+    .pq-quiz-card h3 { font-size: 1rem; margin-bottom: 0.25rem; color: var(--primary); }
+    .pq-quiz-card p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
+    @media (max-width: 768px) {
+      .pq-container { padding: 0.75rem; }
+      .pq-question-card { padding: 1.25rem; }
+      .pq-options { flex-direction: column; gap: 0.75rem; }
+      .pq-option { padding: 1rem; }
+      .pq-progress .q-dot { width: 28px; height: 28px; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">Learn Italian <span>with Iqra</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="videos.html">Videos</a></li>
+      <li><a href="patente-quiz.html" class="active">Patente Quiz</a></li>
+    </ul>
+  </nav>
+
+  <div class="pq-container" style="margin-top:80px;">
+
+    <!-- STEP 1: SELECT QUIZ -->
+    <div id="pq-step-select">
+      <div class="pq-header">
+        <h1><i class="fas fa-clipboard-check"></i> Patente Quiz</h1>
+        <p>Practice for your Italian driving license exam</p>
+      </div>
+      <div id="pqQuizList" class="pq-quiz-list"></div>
+      <div id="pqNoQuizzes" style="display:none;text-align:center;color:var(--text-light);padding:3rem;">
+        <i class="fas fa-clipboard" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+        <p>No quizzes available yet. The teacher will add them soon.</p>
+      </div>
+    </div>
+
+    <!-- STEP 2: QUIZ IN PROGRESS -->
+    <div id="pq-step-quiz" style="display:none;">
+      <div class="pq-header" style="padding-bottom:0;">
+        <h1 id="pqQuizTitle">Quiz Title</h1>
+        <p id="pqQuizInfo" class="pq-info"></p>
+      </div>
+      <div class="pq-progress" id="pqProgress"></div>
+      <div class="pq-question-card">
+        <div class="pq-question-num" id="pqQuestionNum">Question 1 of 10</div>
+        <div class="pq-question-text" id="pqQuestionText"></div>
+        <div class="pq-options">
+          <div class="pq-option" id="pqOptVero" onclick="selectAnswer(true)"><i class="fas fa-check"></i> VERO</div>
+          <div class="pq-option" id="pqOptFalso" onclick="selectAnswer(false)"><i class="fas fa-times"></i> FALSO</div>
+        </div>
+      </div>
+      <div class="pq-nav">
+        <button class="btn btn-outline btn-sm" id="pqPrevBtn" onclick="pqPrev()"><i class="fas fa-chevron-left"></i> Back</button>
+        <span class="pq-info" id="pqPageInfo">1 / 10</span>
+        <button class="btn btn-primary btn-sm" id="pqNextBtn" onclick="pqNext()">Next <i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="btn btn-primary" id="pqSubmitBtn" onclick="submitQuiz()" style="display:none;">
+          <i class="fas fa-paper-plane"></i> Submit Quiz
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3: RESULTS -->
+    <div id="pq-step-results" style="display:none;">
+      <div class="pq-results">
+        <div class="pq-score-circle" id="pqScoreCircle">
+          <span class="score-num" id="pqScoreNum">0</span>
+          <span class="score-label" id="pqScoreLabel">out of 0</span>
+        </div>
+        <h2 id="pqResultTitle">Quiz Complete!</h2>
+        <p id="pqResultMsg" style="color:var(--text-light);margin-bottom:0.5rem;"></p>
+        <p id="pqResultPercent" style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;"></p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="startQuiz(currentQuizId)"><i class="fas fa-redo"></i> Try Again</button>
+          <button class="btn btn-outline" onclick="showStep('select')" style="color:var(--primary);border-color:var(--border);"><i class="fas fa-list"></i> All Quizzes</button>
+        </div>
+      </div>
+      <div class="pq-review" id="pqReview"></div>
+    </div>
+
+  </div>
+
+  <script src="js/docx-parser.js"></script>
+  <script src="js/patente-quiz.js"></script>
+</body>
+</html>
