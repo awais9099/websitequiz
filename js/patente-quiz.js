@@ -47,7 +47,25 @@ function loadQuizList() {
       </div>
     `).join('');
   }).catch(err => {
-    container.innerHTML = '<div style="text-align:center;padding:2rem;color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Error loading quizzes: ' + err.message + '</div>';
+    console.warn('Firestore load failed, trying localStorage:', err);
+    try {
+      const local = JSON.parse(localStorage.getItem('patenteQuizzes') || '[]');
+      if (local.length > 0) {
+        allQuizzes = local;
+        container.innerHTML = local.map(q => `
+          <div class="quiz-select-card" onclick="startQuiz('${q.id}')">
+            <h3><i class="fas fa-car"></i> ${q.title}</h3>
+            <p>Blocco: ${q.blockNumber} | ${q.totalQuestions} questions (offline)</p>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = '';
+        noQuizzes.style.display = 'block';
+      }
+    } catch(e) {
+      container.innerHTML = '';
+      noQuizzes.style.display = 'block';
+    }
   });
 }
 

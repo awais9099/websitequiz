@@ -789,12 +789,14 @@ async function saveImportedQuizzes() {
   const btn = document.getElementById('saveImportBtn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  let savedCount = 0;
   try {
     for (const q of parsedQuizzes) {
       await createPatenteQuiz(q);
+      savedCount++;
     }
     const total = parsedQuizzes.reduce((s, q) => s + q.questions.length, 0);
-    showToast('Saved ' + parsedQuizzes.length + ' quizzes (' + total + ' questions)', 'success');
+    showToast('Saved ' + savedCount + ' quizzes (' + total + ' questions) to cloud', 'success');
     parsedQuizzes = [];
     document.getElementById('importPreview').style.display = 'none';
     document.getElementById('docxPasteArea').value = '';
