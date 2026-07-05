@@ -6,8 +6,30 @@
   <title>Learn Italian with Iqra</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+  <!-- SCROLLING TICKER BAR -->
+  <div class="ticker-bar" id="tickerBar">
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerContent">
+        <span class="ticker-item"><i class="fas fa-phone-alt"></i> WhatsApp: +39 XXX XXX XXXX</span>
+        <span class="ticker-item"><i class="fas fa-star"></i> Italian A2 - Starting Soon!</span>
+        <span class="ticker-item"><i class="fas fa-star"></i> Italian B1 - Enroll Now!</span>
+        <span class="ticker-item"><i class="fas fa-car"></i> Patente Course - Seats Available</span>
+        <span class="ticker-item"><i class="fas fa-clock"></i> Limited Seats - Register Today!</span>
+        <span class="ticker-item"><i class="fas fa-globe-europe"></i> Learn Italian with Expert Guidance</span>
+        <span class="ticker-item"><i class="fas fa-phone-alt"></i> WhatsApp: +39 XXX XXX XXXX</span>
+        <span class="ticker-item"><i class="fas fa-star"></i> Italian A2 - Starting Soon!</span>
+        <span class="ticker-item"><i class="fas fa-star"></i> Italian B1 - Enroll Now!</span>
+        <span class="ticker-item"><i class="fas fa-car"></i> Patente Course - Seats Available</span>
+        <span class="ticker-item"><i class="fas fa-clock"></i> Limited Seats - Register Today!</span>
+        <span class="ticker-item"><i class="fas fa-globe-europe"></i> Learn Italian with Expert Guidance</span>
+      </div>
+    </div>
+  </div>
 
   <nav class="navbar" id="navbar">
     <div class="nav-brand">Learn Italian <span>with Iqra</span></div>
@@ -16,27 +38,91 @@
     </button>
     <ul class="nav-links" id="navLinks">
       <li><a href="#courses">Courses</a></li>
+      <li><a href="#why-us">Why Us</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="quiz.html">Quiz Tool</a></li>
       <li><a href="manage.html">Manage</a></li>
     </ul>
   </nav>
 
-  <section class="hero">
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+      <div class="shape shape-4"></div>
+      <div class="shape shape-5"></div>
+    </div>
     <div class="hero-content container">
+      <div class="hero-badge">
+        <i class="fas fa-award"></i> Trusted by 200+ Students
+      </div>
       <h1>Learn <span class="highlight">Italian</span> with Iqra</h1>
-      <p>Professional Italian language courses and Patente preparation. Start your journey today with expert guidance and structured lessons.</p>
+      <p class="hero-subtitle">Professional Italian language courses and Patente preparation. Start your journey today with expert guidance and structured lessons.</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-number">200+</div>
+          <div class="stat-label">Students</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Courses</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">95%</div>
+          <div class="stat-label">Pass Rate</div>
+        </div>
+      </div>
       <div class="hero-buttons">
-        <a href="#courses" class="btn btn-primary">
+        <a href="#courses" class="btn btn-hero-primary">
           <i class="fas fa-book-open"></i> View Courses
         </a>
-        <a href="#contact" class="btn btn-outline">
+        <a href="#contact" class="btn btn-hero-outline">
           <i class="fas fa-phone"></i> Contact Us
         </a>
       </div>
     </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+        <path d="M0,60 C360,120 720,0 1080,60 C1260,90 1380,80 1440,60 L1440,120 L0,120 Z" fill="#f8f9fa"/>
+      </svg>
+    </div>
   </section>
 
+  <!-- FEATURES SECTION -->
+  <section class="features-section" id="why-us">
+    <div class="container">
+      <div class="section-title">
+        <h2>Why Choose Us?</h2>
+        <p>What makes our courses special</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+          <h3>Expert Teacher</h3>
+          <p>Learn from a qualified and experienced Italian language instructor</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-users"></i></div>
+          <h3>Small Groups</h3>
+          <p>Limited students per batch ensures personalized attention for everyone</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-file-pdf"></i></div>
+          <h3>Study Materials</h3>
+          <p>Access lecture notes, recordings, and practice materials online anytime</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-certificate"></i></div>
+          <h3>Certified Results</h3>
+          <p>95% pass rate in official Italian language and driving license exams</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COURSES SECTION -->
   <section class="section" id="courses">
     <div class="container">
       <div class="section-title">
@@ -45,36 +131,51 @@
       </div>
       <div class="courses-grid">
 
-        <div class="course-card">
+        <div class="course-card card-a2">
+          <div class="card-glow"></div>
+          <div class="card-icon"><i class="fas fa-language"></i></div>
           <span class="course-badge badge-a2">Level A2</span>
           <h3>Italian A2 - Elementary</h3>
           <p class="schedule"><i class="fas fa-clock"></i> 3 sessions per week</p>
           <p class="description">Build on your basics with more complex conversations, grammar patterns, and everyday vocabulary for real-life situations.</p>
-          <div class="start-date">
-            <i class="fas fa-calendar-alt"></i>
-            Starting: <span id="date-a2">Coming Soon</span>
+          <div class="card-footer">
+            <div class="start-date">
+              <i class="fas fa-calendar-alt"></i>
+              Starting: <span class="date-value" id="date-a2">Coming Soon</span>
+            </div>
+            <a href="#contact" class="card-btn"><i class="fas fa-arrow-right"></i></a>
           </div>
         </div>
 
-        <div class="course-card">
+        <div class="course-card card-b1">
+          <div class="card-glow"></div>
+          <div class="card-icon"><i class="fas fa-comments"></i></div>
           <span class="course-badge badge-b1">Level B1</span>
           <h3>Italian B1 - Intermediate</h3>
           <p class="schedule"><i class="fas fa-clock"></i> 3 sessions per week</p>
           <p class="description">Advance to intermediate level with complex grammar, reading comprehension, and professional communication skills.</p>
-          <div class="start-date">
-            <i class="fas fa-calendar-alt"></i>
-            Starting: <span id="date-b1">Coming Soon</span>
+          <div class="card-footer">
+            <div class="start-date">
+              <i class="fas fa-calendar-alt"></i>
+              Starting: <span class="date-value" id="date-b1">Coming Soon</span>
+            </div>
+            <a href="#contact" class="card-btn"><i class="fas fa-arrow-right"></i></a>
           </div>
         </div>
 
-        <div class="course-card">
+        <div class="course-card card-patente">
+          <div class="card-glow"></div>
+          <div class="card-icon"><i class="fas fa-car"></i></div>
           <span class="course-badge badge-patente">Patente</span>
           <h3>Patente - Driving License</h3>
           <p class="schedule"><i class="fas fa-clock"></i> Intensive preparation</p>
           <p class="description">Complete preparation for the Italian driving license exam. Learn traffic rules, road signs, and exam-specific vocabulary.</p>
-          <div class="start-date">
-            <i class="fas fa-calendar-alt"></i>
-            Starting: <span id="date-patente">Coming Soon</span>
+          <div class="card-footer">
+            <div class="start-date">
+              <i class="fas fa-calendar-alt"></i>
+              Starting: <span class="date-value" id="date-patente">Coming Soon</span>
+            </div>
+            <a href="#contact" class="card-btn"><i class="fas fa-arrow-right"></i></a>
           </div>
         </div>
 
@@ -82,29 +183,108 @@
     </div>
   </section>
 
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>What Students Say</h2>
+        <p>Hear from our community</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          </div>
+          <p>"Iqra made learning Italian so easy and fun. I passed my A2 exam on the first try!"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">S</div>
+            <div>
+              <strong>Sara M.</strong>
+              <span>Italian A2 Student</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          </div>
+          <p>"The Patente course was very well organized. All the study materials were helpful."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">A</div>
+            <div>
+              <strong>Ahmed K.</strong>
+              <span>Patente Course</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          </div>
+          <p>"Best Italian teacher! The online classes are well structured and easy to follow."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">F</div>
+            <div>
+              <strong>Fatima R.</strong>
+              <span>Italian B1 Student</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT SECTION -->
   <section class="contact-section" id="contact">
     <div class="container">
       <h2>Get in Touch</h2>
       <p>Have questions? Want to enroll? Reach out through any of these channels.</p>
       <div class="social-links">
         <a href="https://wa.me/YOUR_NUMBER" target="_blank" class="social-link social-whatsapp">
-          <i class="fab fa-whatsapp"></i> WhatsApp
+          <i class="fab fa-whatsapp"></i>
+          <div>
+            <div class="social-label">WhatsApp</div>
+            <div class="social-sublabel">Chat with us now</div>
+          </div>
         </a>
         <a href="https://www.tiktok.com/@YOUR_USERNAME" target="_blank" class="social-link social-tiktok">
-          <i class="fab fa-tiktok"></i> TikTok
+          <i class="fab fa-tiktok"></i>
+          <div>
+            <div class="social-label">TikTok</div>
+            <div class="social-sublabel">Follow for tips</div>
+          </div>
         </a>
         <a href="https://www.instagram.com/YOUR_USERNAME" target="_blank" class="social-link social-instagram">
-          <i class="fab fa-instagram"></i> Instagram
+          <i class="fab fa-instagram"></i>
+          <div>
+            <div class="social-label">Instagram</div>
+            <div class="social-sublabel">See our content</div>
+          </div>
         </a>
       </div>
     </div>
   </section>
 
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
-      <p>&copy; 2026 Learn Italian with Iqra. All rights reserved.</p>
+      <div class="footer-inner">
+        <div class="footer-brand">Learn Italian <span>with Iqra</span></div>
+        <p>&copy; 2026 Learn Italian with Iqra. All rights reserved.</p>
+        <div class="footer-socials">
+          <a href="https://wa.me/YOUR_NUMBER" target="_blank"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.tiktok.com/@YOUR_USERNAME" target="_blank"><i class="fab fa-tiktok"></i></a>
+          <a href="https://www.instagram.com/@YOUR_USERNAME" target="_blank"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
     </div>
   </footer>
+
+  <!-- FLOATING WHATSAPP BUTTON -->
+  <a href="https://wa.me/YOUR_NUMBER" target="_blank" class="whatsapp-float" aria-label="Chat on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+    <span class="whatsapp-pulse"></span>
+  </a>
 
   <script src="js/landing.js"></script>
 </body>
