@@ -1271,40 +1271,95 @@ a {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .ticker-bar { height: 36px; }
-  .ticker-item { font-size: 0.78rem; }
-  .navbar { top: 36px; }
-  .hero { margin-top: 100px; padding: 3.5rem 0 4rem; }
-  .hero h1 { font-size: 2rem; }
-  .hero-subtitle { font-size: 1rem; }
-  .hero-stats { gap: 1.5rem; }
-  .stat-number { font-size: 1.6rem; }
-  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .ticker-item { font-size: 0.78rem; gap: 0.35rem; }
+  .ticker-content { gap: 2rem; }
+  .navbar { top: 36px; padding: 0 1rem; height: 56px; }
+  .nav-brand { font-size: 1.1rem; }
+  .hero { margin-top: 92px; padding: 3rem 0 4rem; }
+  .hero h1 { font-size: 1.8rem; }
+  .hero-badge { font-size: 0.78rem; padding: 0.4rem 1rem; }
+  .hero-subtitle { font-size: 0.95rem; padding: 0 0.5rem; }
+  .hero-stats { gap: 1.5rem; margin-bottom: 2rem; }
+  .stat-number { font-size: 1.5rem; }
+  .stat-label { font-size: 0.75rem; }
+  .hero-buttons { flex-direction: column; align-items: center; gap: 0.75rem; }
+  .btn-hero-primary, .btn-hero-outline { width: 100%; max-width: 280px; justify-content: center; }
+  .features-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .feature-card { padding: 1.25rem 1rem; }
+  .feature-icon { width: 50px; height: 50px; font-size: 1.2rem; }
+  .section { padding: 3rem 0; }
+  .section-title h2 { font-size: 1.5rem; }
+  .courses-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .course-card { padding: 1.5rem; }
+  .testimonials-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .testimonial-card { padding: 1.5rem; }
+  .contact-section { padding: 3rem 0; }
+  .contact-section h2 { font-size: 1.5rem; }
+  .social-links { flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 0 1rem; }
+  .social-link { justify-content: center; padding: 0.9rem 1.25rem; }
   .nav-links { display: none; }
   .nav-toggle { display: block; }
   .nav-links.active {
     display: flex;
     flex-direction: column;
     position: absolute;
-    top: 64px;
+    top: 56px;
     left: 0;
     right: 0;
     background: white;
-    padding: 1rem 2rem;
+    padding: 0.75rem 1.5rem;
     border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-lg);
+    gap: 0;
   }
+  .nav-links.active li { border-bottom: 1px solid var(--border); }
+  .nav-links.active li:last-child { border-bottom: none; }
+  .nav-links.active a { display: block; padding: 0.75rem 0; font-size: 1rem; }
   .form-row { grid-template-columns: 1fr; }
-  .social-links { flex-direction: column; align-items: center; }
   .result-buttons { flex-direction: column; }
-  .footer-inner { flex-direction: column; text-align: center; }
+  .footer-inner { flex-direction: column; text-align: center; gap: 0.75rem; }
   .footer-socials { justify-content: center; }
+  .footer { padding: 1.5rem 0; }
+  .whatsapp-float { width: 52px; height: 52px; font-size: 1.5rem; bottom: 1.25rem; right: 1.25rem; }
+
+  .quiz-container { margin-top: 92px; padding: 0 1rem; }
+  .quiz-header h1 { font-size: 1.4rem; }
+  .quiz-card { padding: 1.25rem; }
+  .question-text { font-size: 1rem; }
+  .option-item { padding: 0.65rem 0.85rem; font-size: 0.9rem; }
+  .result-btn { padding: 0.65rem; font-size: 0.9rem; }
+  .score-circle { width: 100px; height: 100px; font-size: 1.6rem; }
+
+  .manage-header { margin-top: 92px; padding: 1.5rem 0; }
+  .manage-header h1 { font-size: 1.2rem; }
+  .manage-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .manage-tabs::-webkit-scrollbar { display: none; }
+  .manage-tab { padding: 0.5rem 1rem; font-size: 0.8rem; white-space: nowrap; }
+  .manage-content { padding: 0 1rem; }
+  .data-table { font-size: 0.85rem; }
+  .data-table th, .data-table td { padding: 0.6rem 0.75rem; }
+  .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .modal { padding: 1.5rem; margin: 0.5rem; }
 }
 
 @media (max-width: 480px) {
-  .hero h1 { font-size: 1.6rem; }
-  .hero-stats { flex-direction: column; gap: 0.75rem; }
-  .courses-grid { grid-template-columns: 1fr; }
+  .ticker-bar { height: 32px; }
+  .ticker-item { font-size: 0.72rem; }
+  .navbar { height: 52px; }
+  .hero { margin-top: 84px; padding: 2.5rem 0 3.5rem; }
+  .hero h1 { font-size: 1.5rem; }
+  .hero-badge { font-size: 0.72rem; margin-bottom: 1rem; }
+  .hero-subtitle { font-size: 0.88rem; }
+  .hero-stats { flex-direction: row; gap: 1rem; }
+  .stat-number { font-size: 1.3rem; }
+  .stat-label { font-size: 0.7rem; }
   .features-grid { grid-template-columns: 1fr; }
+  .courses-grid { grid-template-columns: 1fr; }
   .testimonials-grid { grid-template-columns: 1fr; }
-  .quiz-card { padding: 1.25rem; }
+  .quiz-container { margin-top: 84px; }
+  .quiz-card { padding: 1rem; }
+  .question-box { padding: 1rem; }
+  .manage-header { margin-top: 84px; }
+  .whatsapp-float { width: 48px; height: 48px; font-size: 1.35rem; bottom: 1rem; right: 1rem; }
 }
