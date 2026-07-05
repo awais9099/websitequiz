@@ -81,8 +81,8 @@
         <div class="container">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
             <div>
-              <h1><i class="fas fa-play-circle"></i> Video Lessons</h1>
-              <p>Watch recorded lectures and download study materials</p>
+              <h1><i class="fas fa-play-circle"></i> <span id="groupNameDisplay">Video Lessons</span></h1>
+              <p id="groupLevelDisplay">Watch recorded lectures and download study materials</p>
             </div>
             <div style="display:flex;align-items:center;gap:1rem;">
               <span id="studentNameDisplay" style="color:rgba(255,255,255,0.8);font-size:0.9rem;"></span>
@@ -94,17 +94,11 @@
               </button>
             </div>
           </div>
-          <div class="videos-filters" id="videoFilters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="A2">Italian A2</button>
-            <button class="filter-btn" data-filter="B1">Italian B1</button>
-            <button class="filter-btn" data-filter="patente">Patente</button>
-          </div>
         </div>
       </div>
 
       <div class="container videos-page-content">
-        <div class="videos-list" id="videosList"></div>
+        <div id="sectionsContainer"></div>
         <div class="videos-empty" id="videosEmpty" style="display:none;">
           <i class="fas fa-video"></i>
           <h3>No videos available yet</h3>
@@ -150,152 +144,6 @@
 
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
-  <script>
-    const NAV_TOGGLE = document.getElementById('navToggle');
-    const NAV_LINKS = document.getElementById('navLinks');
-    NAV_TOGGLE.addEventListener('click', () => NAV_LINKS.classList.toggle('active'));
-    document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click', () => NAV_LINKS.classList.remove('active')));
-
-    const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
-    const videos = settings.videos || [];
-    let currentFilter = 'all';
-    let currentUser = null;
-
-    function getYouTubeEmbed(url) {
-      if (!url) return null;
-      if (url.includes('mediadelivery.net') || url.includes('bunny.net') || url.includes('b-cdn.net')) return url;
-      let videoId = '';
-      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
-      else if (url.includes('youtube.com/watch')) videoId = new URLSearchParams(new URL(url).search).get('v');
-      else if (url.includes('youtube.com/embed/')) videoId = url.split('youtube.com/embed/')[1].split('?')[0];
-      else { const parts = url.split('/'); videoId = parts[parts.length - 1].split('?')[0]; }
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    }
-
-    function renderVideos() {
-      const list = document.getElementById('videosList');
-      const empty = document.getElementById('videosEmpty');
-      const filtered = currentFilter === 'all' ? videos : videos.filter(v => v.level === currentFilter);
-      if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-      empty.style.display = 'none';
-      list.innerHTML = filtered.map(v => {
-        const embedUrl = getYouTubeEmbed(v.url);
-        const levelBadge = v.level ? `<span class="course-badge badge-${v.level === 'patente' ? 'patente' : v.level.toLowerCase()}">${v.level}</span>` : '';
-        const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Download Notes</a>` : '';
-        return `
-          <div class="video-list-item" data-level="${v.level || ''}">
-            <div class="video-list-player">
-              ${embedUrl ? `<iframe src="${embedUrl}" title="${v.title}" frameborder="0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;" allowfullscreen loading="lazy"></iframe>` : `<div class="video-placeholder"><i class="fas fa-play-circle"></i></div>`}
-            </div>
-            <div class="video-list-info">
-              <div class="video-list-meta">
-                ${levelBadge}
-                ${v.label ? `<span class="video-label-tag"><i class="fas fa-tag"></i> ${v.label}</span>` : ''}
-              </div>
-              <h3>${v.title}</h3>
-              ${v.description ? `<p class="video-list-desc">${v.description}</p>` : ''}
-              <div class="video-list-actions">${notesHtml}</div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        renderVideos();
-      });
-    });
-
-    function showSection(section) {
-      ['loadingState', 'notLoggedIn', 'notActive', 'videosContent'].forEach(id => {
-        document.getElementById(id).style.display = 'none';
-      });
-      document.getElementById(section).style.display = 'block';
-      if (section === 'videosContent') {
-        document.getElementById('footer').style.display = 'block';
-      }
-    }
-
-    async function handleLogout() {
-      await signOut();
-      currentUser = null;
-      window.location.href = 'index.html';
-    }
-
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    document.getElementById('logoutBtnTop').addEventListener('click', handleLogout);
-
-    // Change Password Modal
-    const changePwModal = document.getElementById('changePwModal');
-    const changePwBtnTop = document.getElementById('changePwBtnTop');
-    const closeChangePwModal = document.getElementById('closeChangePwModal');
-    const cancelChangePw = document.getElementById('cancelChangePw');
-    const saveChangePw = document.getElementById('saveChangePw');
-    const changePwError = document.getElementById('changePwError');
-
-    changePwBtnTop.addEventListener('click', () => {
-      changePwError.style.display = 'none';
-      document.getElementById('newPassword').value = '';
-      document.getElementById('confirmPassword').value = '';
-      changePwModal.classList.add('active');
-    });
-
-    closeChangePwModal.addEventListener('click', () => changePwModal.classList.remove('active'));
-    cancelChangePw.addEventListener('click', () => changePwModal.classList.remove('active'));
-    changePwModal.addEventListener('click', (e) => { if (e.target === changePwModal) changePwModal.classList.remove('active'); });
-
-    saveChangePw.addEventListener('click', async () => {
-      const newPw = document.getElementById('newPassword').value;
-      const confirmPw = document.getElementById('confirmPassword').value;
-      changePwError.style.display = 'none';
-
-      if (newPw.length < 6) { changePwError.textContent = 'Password must be at least 6 characters.'; changePwError.style.display = 'block'; return; }
-      if (newPw !== confirmPw) { changePwError.textContent = 'Passwords do not match.'; changePwError.style.display = 'block'; return; }
-
-      try {
-        await changePassword(newPw);
-        changePwModal.classList.remove('active');
-        alert('Password changed successfully!');
-      } catch (err) {
-        let msg = 'Could not change password.';
-        if (err.code === 'auth/requires-recent-login') msg = 'Please log out and log in again, then try changing your password.';
-        changePwError.textContent = msg;
-        changePwError.style.display = 'block';
-      }
-    });
-
-    initFirebase().then(() => {
-      onAuthStateChanged(async (user) => {
-        if (!user) {
-          showSection('notLoggedIn');
-          return;
-        }
-        currentUser = user;
-        const profile = await getStudentProfile(user.uid);
-
-        if (profile && profile.role === 'teacher') {
-          document.getElementById('navQuizLink').style.display = 'block';
-          document.getElementById('navManageLink').style.display = 'block';
-          document.getElementById('studentNameDisplay').textContent = 'Teacher';
-          showSection('videosContent');
-          renderVideos();
-          return;
-        }
-
-        if (!profile || !profile.isActive) {
-          document.getElementById('pendingNameDisplay').textContent = profile.name || user.email;
-          showSection('notActive');
-          return;
-        }
-
-        document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
-        showSection('videosContent');
-        renderVideos();
-      });
-    });
-  </script>
+  <script src="js/videos.js"></script>
 </body>
 </html>

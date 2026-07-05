@@ -106,3 +106,90 @@ async function linkPendingProfile(docId, uid) {
   await firebaseDb.collection('students').doc(uid).set({ ...data, uid });
   await firebaseDb.collection('students').doc(docId).delete();
 }
+
+// ===== GROUPS =====
+async function createGroup(data) {
+  const ref = await firebaseDb.collection('groups').add(data);
+  return ref.id;
+}
+
+async function getGroups(level) {
+  let query = firebaseDb.collection('groups');
+  if (level) query = query.where('level', '==', level);
+  const snapshot = await query.get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getGroup(groupId) {
+  const doc = await firebaseDb.collection('groups').doc(groupId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
+async function updateGroup(groupId, data) {
+  return firebaseDb.collection('groups').doc(groupId).update(data);
+}
+
+async function deleteGroup(groupId) {
+  const sections = await getSections(groupId);
+  for (const section of sections) {
+    const videos = await getVideos(section.id);
+    for (const video of videos) {
+      await firebaseDb.collection('videos').doc(video.id).delete();
+    }
+    await firebaseDb.collection('sections').doc(section.id).delete();
+  }
+  return firebaseDb.collection('groups').doc(groupId).delete();
+}
+
+// ===== SECTIONS =====
+async function createSection(data) {
+  const ref = await firebaseDb.collection('sections').add(data);
+  return ref.id;
+}
+
+async function getSections(groupId) {
+  const snapshot = await firebaseDb.collection('sections')
+    .where('groupId', '==', groupId)
+    .get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function updateSection(sectionId, data) {
+  return firebaseDb.collection('sections').doc(sectionId).update(data);
+}
+
+async function deleteSection(sectionId) {
+  const videos = await getVideos(sectionId);
+  for (const video of videos) {
+    await firebaseDb.collection('videos').doc(video.id).delete();
+  }
+  return firebaseDb.collection('sections').doc(sectionId).delete();
+}
+
+// ===== VIDEOS =====
+async function createVideo(data) {
+  const ref = await firebaseDb.collection('videos').add(data);
+  return ref.id;
+}
+
+async function getVideos(sectionId) {
+  const snapshot = await firebaseDb.collection('videos')
+    .where('sectionId', '==', sectionId)
+    .get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getVideosByGroup(groupId) {
+  const snapshot = await firebaseDb.collection('videos')
+    .where('groupId', '==', groupId)
+    .get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function updateVideo(videoId, data) {
+  return firebaseDb.collection('videos').doc(videoId).update(data);
+}
+
+async function deleteVideo(videoId) {
+  return firebaseDb.collection('videos').doc(videoId).delete();
+}

@@ -48,6 +48,9 @@
         <button class="manage-tab active" data-tab="students">
           <i class="fas fa-users"></i> Students
         </button>
+        <button class="manage-tab" data-tab="groups">
+          <i class="fas fa-layer-group"></i> Groups
+        </button>
         <button class="manage-tab" data-tab="questions">
           <i class="fas fa-question-circle"></i> Questions
         </button>
@@ -79,6 +82,7 @@
             <th>Email</th>
             <th>Phone</th>
             <th>Level</th>
+            <th>Group</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -86,6 +90,20 @@
         <tbody id="studentsBody"></tbody>
       </table>
       <p id="noStudents" style="text-align:center;color:var(--text-light);padding:2rem;display:none;">No students registered yet.</p>
+    </div>
+
+    <!-- GROUPS TAB -->
+    <div class="tab-panel" id="tab-groups">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h2 style="font-size:1.25rem;">Course Groups</h2>
+        <button class="btn btn-primary btn-sm" id="addGroupBtn">
+          <i class="fas fa-plus"></i> Add Group
+        </button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.5rem;">Manage course groups. Each group has sections (weeks) with videos. Students are assigned to a specific group.</p>
+
+      <div id="groupsContainer"></div>
+      <p id="noGroups" style="text-align:center;color:var(--text-light);padding:2rem;display:none;">No groups created yet.</p>
     </div>
 
     <!-- QUESTIONS TAB -->
@@ -183,17 +201,6 @@
           <i class="fas fa-save"></i> Save Links
         </button>
       </div>
-
-      <div class="quiz-card" style="margin-top:1.5rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-          <h3 style="margin:0;border:none;padding:0;"><i class="fas fa-video" style="color:var(--danger);"></i> Video Library</h3>
-          <button class="btn btn-primary btn-sm" id="addVideoBtn">
-            <i class="fas fa-plus"></i> Add Video
-          </button>
-        </div>
-        <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Add Bunny.net or YouTube video links with labels and optional PDF notes.</p>
-        <div id="videoListAdmin" class="video-list-admin"></div>
-      </div>
     </div>
 
   <!-- ADD/EDIT STUDENT MODAL -->
@@ -224,12 +231,18 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="sActive">Status</label>
-          <select id="sActive">
-            <option value="false">Inactive (not paid)</option>
-            <option value="true">Active (paid)</option>
+          <label for="sGroup">Group</label>
+          <select id="sGroup">
+            <option value="">No group</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label for="sActive">Status</label>
+        <select id="sActive">
+          <option value="false">Inactive (not paid)</option>
+          <option value="true">Active (paid)</option>
+        </select>
       </div>
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelStudentModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
@@ -285,27 +298,63 @@
     </div>
   </div>
 
+  <!-- ADD/EDIT GROUP MODAL -->
+  <div class="modal-overlay" id="groupModal">
+    <div class="modal">
+      <h2 id="groupModalTitle">Add Group</h2>
+      <div class="form-group">
+        <label for="gName">Group Name</label>
+        <input type="text" id="gName" placeholder="e.g. Group 3 A2">
+      </div>
+      <div class="form-group">
+        <label for="gLevel">Level</label>
+        <select id="gLevel">
+          <option value="A2">Italian A2</option>
+          <option value="B1">Italian B1</option>
+          <option value="patente">Patente</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelGroupModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveGroup">
+          <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT SECTION MODAL -->
+  <div class="modal-overlay" id="sectionModal">
+    <div class="modal">
+      <h2 id="sectionModalTitle">Add Section</h2>
+      <div class="form-group">
+        <label for="secTitle">Section Title</label>
+        <input type="text" id="secTitle" placeholder="e.g. Week 1: Greetings & Basics">
+      </div>
+      <div class="form-group">
+        <label for="secOrder">Order</label>
+        <input type="number" id="secOrder" min="1" value="1">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelSectionModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveSection">
+          <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ADD/EDIT VIDEO MODAL -->
   <div class="modal-overlay" id="videoModal">
     <div class="modal">
       <h2 id="videoModalTitle">Add Video</h2>
       <div class="form-group">
         <label for="vTitle">Video Title</label>
-        <input type="text" id="vTitle" placeholder="e.g. Italian A2 - Lesson 1: Greetings">
+        <input type="text" id="vTitle" placeholder="e.g. Lesson 1: Greetings">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="vLevel">Level</label>
-          <select id="vLevel">
-            <option value="A2">Italian A2</option>
-            <option value="B1">Italian B1</option>
-            <option value="patente">Patente</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="vLabel">Label (optional)</label>
-          <input type="text" id="vLabel" placeholder="e.g. Lesson 1, Grammar, Vocabulary">
-        </div>
+      <div class="form-group">
+        <label for="vTopics">Topics (comma separated)</label>
+        <input type="text" id="vTopics" placeholder="e.g. Greetings, Introductions, Numbers">
       </div>
       <div class="form-group">
         <label for="vDescription">Description (optional)</label>
@@ -314,6 +363,10 @@
       <div class="form-group">
         <label for="vUrl">Video URL (Bunny.net or YouTube)</label>
         <input type="url" id="vUrl" placeholder="https://player.mediadelivery.net/embed/... or YouTube URL">
+      </div>
+      <div class="form-group">
+        <label for="vThumbnail">Thumbnail Image URL (optional)</label>
+        <input type="url" id="vThumbnail" placeholder="https://... (direct link to image)">
       </div>
       <div class="form-group">
         <label for="vNotesUrl">PDF Notes URL (optional)</label>

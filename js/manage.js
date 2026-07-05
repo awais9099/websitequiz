@@ -1,7 +1,11 @@
 let questions = JSON.parse(JSON.stringify(window.QUESTIONS_DATA || []));
 let editingId = null;
-let editingVideoIdx = null;
 let editingStudentUid = null;
+let editingGroupId = null;
+let editingSectionId = null;
+let editingVideoId = null;
+let currentGroupId = null;
+let allGroups = [];
 let isTeacher = false;
 
 // ===== AUTH CHECK =====
@@ -40,6 +44,7 @@ TABS.forEach(tab => {
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'students') loadStudents();
+    if (tab.dataset.tab === 'groups') loadGroups();
   });
 });
 
@@ -48,6 +53,8 @@ async function loadStudents() {
   const tbody = document.getElementById('studentsBody');
   const noStudents = document.getElementById('noStudents');
   try {
+    allGroups = await getGroups();
+    populateGroupSelect();
     const students = await getAllStudents();
     const studentList = students.filter(s => s.role !== 'teacher');
     if (studentList.length === 0) {
@@ -56,12 +63,15 @@ async function loadStudents() {
       return;
     }
     noStudents.style.display = 'none';
-    tbody.innerHTML = studentList.map(s => `
+    tbody.innerHTML = studentList.map(s => {
+      const group = allGroups.find(g => g.id === s.groupId);
+      return `
       <tr>
         <td><strong>${s.name || 'N/A'}</strong></td>
         <td>${s.email || 'N/A'}</td>
         <td>${s.phone || 'N/A'}</td>
         <td>${s.level ? `<span class="course-badge badge-${s.level === 'patente' ? 'patente' : s.level.toLowerCase()}">${s.level}</span>` : '<span style="color:var(--text-light);">Not set</span>'}</td>
+        <td>${group ? `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);">${group.name}</span>` : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
         <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
         <td class="actions">
           <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
@@ -73,11 +83,21 @@ async function loadStudents() {
           </button>
           <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+    }).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem;">Error loading students: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:2rem;">Error loading students: ${err.message}</td></tr>`;
   }
+}
+
+function populateGroupSelect() {
+  const select = document.getElementById('sGroup');
+  const current = select.value;
+  select.innerHTML = '<option value="">No group</option>';
+  allGroups.forEach(g => {
+    select.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+  });
+  select.value = current;
 }
 
 function openStudentModal(title) {
@@ -88,7 +108,7 @@ function openStudentModal(title) {
 function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
   editingStudentUid = null;
-  ['sName','sEmail','sPhone','sLevel','sActive'].forEach(id => {
+  ['sName','sEmail','sPhone','sLevel','sGroup','sActive'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (el.tagName === 'SELECT') el.selectedIndex = 0;
@@ -107,6 +127,7 @@ async function editStudent(uid) {
   document.getElementById('sEmail').disabled = true;
   document.getElementById('sPhone').value = profile.phone || '';
   document.getElementById('sLevel').value = profile.level || '';
+  document.getElementById('sGroup').value = profile.groupId || '';
   document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
   openStudentModal('Edit Student');
 }
@@ -116,12 +137,13 @@ async function saveStudent() {
   const email = document.getElementById('sEmail').value.trim();
   const phone = document.getElementById('sPhone').value.trim();
   const level = document.getElementById('sLevel').value;
+  const groupId = document.getElementById('sGroup').value;
   const isActive = document.getElementById('sActive').value === 'true';
 
   if (!name) { showToast('Enter a name', 'error'); return; }
 
   if (editingStudentUid) {
-    const updateData = { name, phone, level, isActive };
+    const updateData = { name, phone, level, groupId, isActive };
     await updateStudentProfile(editingStudentUid, updateData);
     showToast('Student updated');
   } else {
@@ -129,7 +151,7 @@ async function saveStudent() {
     try {
       const docId = 'pending_' + email.replace(/[@.]/g, '_');
       await createStudentProfile(docId, {
-        name, email, phone, level, isActive,
+        name, email, phone, level, groupId, isActive,
         role: 'student',
         isPending: true,
         createdAt: new Date().toISOString()
@@ -165,6 +187,254 @@ async function resetStudentPassword(email) {
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }
+}
+
+// ===== GROUPS =====
+async function loadGroups() {
+  const container = document.getElementById('groupsContainer');
+  const noGroups = document.getElementById('noGroups');
+  try {
+    allGroups = await getGroups();
+    if (allGroups.length === 0) {
+      container.innerHTML = '';
+      noGroups.style.display = 'block';
+      return;
+    }
+    noGroups.style.display = 'none';
+    const sorted = allGroups.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    container.innerHTML = '';
+    for (const group of sorted) {
+      const sections = await getSections(group.id);
+      const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+      let sectionsHtml = '';
+      for (const sec of sortedSections) {
+        const videos = await getVideos(sec.id);
+        const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
+        const videosHtml = sortedVideos.map(v => `
+          <div class="video-item">
+            <div class="video-item-info">
+              ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-thumb" onerror="this.style.display='none'">` : '<div class="video-thumb"></div>'}
+              <div class="video-item-details">
+                <strong>${v.title}</strong>
+                <span class="video-topics">${v.topics || ''}</span>
+              </div>
+            </div>
+            <div class="group-actions">
+              <button class="btn btn-secondary btn-sm" onclick="editVideo('${v.id}','${group.id}','${sec.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="deleteVideoConfirm('${v.id}','${group.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+        sectionsHtml += `
+          <div class="section-card">
+            <div class="section-header">
+              <h4><i class="fas fa-list"></i> ${sec.title}</h4>
+              <div class="group-actions">
+                <button class="btn btn-primary btn-xs" onclick="openVideoModal('${group.id}','${sec.id}')"><i class="fas fa-plus"></i> Video</button>
+                <button class="btn btn-secondary btn-xs" onclick="editSection('${sec.id}','${group.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-xs" onclick="deleteSectionConfirm('${sec.id}','${group.id}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+            <div class="section-body">
+              ${sortedVideos.length === 0 ? '<p style="color:var(--text-light);font-size:0.85rem;text-align:center;padding:0.5rem;">No videos yet</p>' : videosHtml}
+            </div>
+          </div>
+        `;
+      }
+      const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
+      container.innerHTML += `
+        <div class="group-card">
+          <div class="group-header" onclick="toggleGroupBody(this)">
+            <h3>
+              <i class="fas fa-layer-group"></i> ${group.name}
+              <span class="group-level course-badge ${badgeClass}">${group.level}</span>
+            </h3>
+            <div class="group-actions">
+              <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();openSectionModal('${group.id}')"><i class="fas fa-plus"></i> Section</button>
+              <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editGroup('${group.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteGroupConfirm('${group.id}')"><i class="fas fa-trash"></i></button>
+              <i class="fas fa-chevron-down" style="color:var(--text-light);transition:transform 0.3s;"></i>
+            </div>
+          </div>
+          <div class="group-body" style="display:none;">
+            ${sortedSections.length === 0 ? '<p style="color:var(--text-light);text-align:center;padding:1rem;">No sections yet. Add a section to organize videos.</p>' : sectionsHtml}
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--danger);text-align:center;padding:2rem;">Error loading groups: ${err.message}</p>`;
+  }
+}
+
+function toggleGroupBody(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.fa-chevron-down');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  } else {
+    body.style.display = 'none';
+    if (icon) icon.style.transform = '';
+  }
+}
+
+function openGroupModal(title) {
+  document.getElementById('groupModalTitle').textContent = title || 'Add Group';
+  document.getElementById('groupModal').classList.add('active');
+}
+
+function closeGroupModal() {
+  document.getElementById('groupModal').classList.remove('active');
+  editingGroupId = null;
+  document.getElementById('gName').value = '';
+  document.getElementById('gLevel').selectedIndex = 0;
+}
+
+async function editGroup(groupId) {
+  const group = await getGroup(groupId);
+  if (!group) return;
+  editingGroupId = groupId;
+  document.getElementById('gName').value = group.name || '';
+  document.getElementById('gLevel').value = group.level || 'A2';
+  openGroupModal('Edit Group');
+}
+
+async function saveGroup() {
+  const name = document.getElementById('gName').value.trim();
+  const level = document.getElementById('gLevel').value;
+  if (!name) { showToast('Enter a group name', 'error'); return; }
+  if (editingGroupId) {
+    await updateGroup(editingGroupId, { name, level });
+    showToast('Group updated');
+  } else {
+    await createGroup({ name, level, createdAt: new Date().toISOString() });
+    showToast('Group created');
+  }
+  closeGroupModal();
+  loadGroups();
+}
+
+async function deleteGroupConfirm(groupId) {
+  if (!confirm('Delete this group and ALL its sections and videos? This cannot be undone.')) return;
+  await deleteGroup(groupId);
+  showToast('Group deleted');
+  loadGroups();
+}
+
+// ===== SECTIONS =====
+function openSectionModal(groupId, title) {
+  editingSectionId = null;
+  currentGroupId = groupId;
+  document.getElementById('sectionModalTitle').textContent = title || 'Add Section';
+  document.getElementById('secTitle').value = '';
+  document.getElementById('secOrder').value = 1;
+  document.getElementById('sectionModal').classList.add('active');
+}
+
+function closeSectionModal() {
+  document.getElementById('sectionModal').classList.remove('active');
+  editingSectionId = null;
+  currentGroupId = null;
+}
+
+async function editSection(sectionId, groupId) {
+  const sections = await getSections(groupId);
+  const sec = sections.find(s => s.id === sectionId);
+  if (!sec) return;
+  editingSectionId = sectionId;
+  currentGroupId = groupId;
+  document.getElementById('secTitle').value = sec.title || '';
+  document.getElementById('secOrder').value = sec.order || 1;
+  document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+  document.getElementById('sectionModal').classList.add('active');
+}
+
+async function saveSection() {
+  const title = document.getElementById('secTitle').value.trim();
+  const order = parseInt(document.getElementById('secOrder').value) || 1;
+  if (!title) { showToast('Enter a section title', 'error'); return; }
+  if (editingSectionId) {
+    await updateSection(editingSectionId, { title, order });
+    showToast('Section updated');
+  } else {
+    await createSection({ groupId: currentGroupId, title, order, createdAt: new Date().toISOString() });
+    showToast('Section added');
+  }
+  closeSectionModal();
+  loadGroups();
+}
+
+async function deleteSectionConfirm(sectionId, groupId) {
+  if (!confirm('Delete this section and ALL its videos? This cannot be undone.')) return;
+  await deleteSection(sectionId);
+  showToast('Section deleted');
+  loadGroups();
+}
+
+// ===== VIDEOS =====
+function openVideoModal(groupId, sectionId, title) {
+  editingVideoId = null;
+  currentGroupId = groupId;
+  editingSectionId = sectionId;
+  document.getElementById('videoModalTitle').textContent = title || 'Add Video';
+  ['vTitle','vTopics','vDescription','vUrl','vThumbnail','vNotesUrl'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('videoModal').classList.add('active');
+}
+
+function closeVideoModal() {
+  document.getElementById('videoModal').classList.remove('active');
+  editingVideoId = null;
+  editingSectionId = null;
+  currentGroupId = null;
+}
+
+async function editVideo(videoId, groupId, sectionId) {
+  const videos = await getVideos(sectionId);
+  const video = videos.find(v => v.id === videoId);
+  if (!video) return;
+  editingVideoId = videoId;
+  currentGroupId = groupId;
+  editingSectionId = sectionId;
+  document.getElementById('vTitle').value = video.title || '';
+  document.getElementById('vTopics').value = video.topics || '';
+  document.getElementById('vDescription').value = video.description || '';
+  document.getElementById('vUrl').value = video.url || '';
+  document.getElementById('vThumbnail').value = video.thumbnail || '';
+  document.getElementById('vNotesUrl').value = video.notesUrl || '';
+  document.getElementById('videoModalTitle').textContent = 'Edit Video';
+  document.getElementById('videoModal').classList.add('active');
+}
+
+async function saveVideo() {
+  const title = document.getElementById('vTitle').value.trim();
+  const topics = document.getElementById('vTopics').value.trim();
+  const description = document.getElementById('vDescription').value.trim();
+  const url = document.getElementById('vUrl').value.trim();
+  const thumbnail = document.getElementById('vThumbnail').value.trim();
+  const notesUrl = document.getElementById('vNotesUrl').value.trim();
+  if (!title) { showToast('Enter a video title', 'error'); return; }
+  if (!url) { showToast('Enter a video URL', 'error'); return; }
+  const data = { title, topics, description, url, thumbnail, notesUrl, sectionId: editingSectionId, groupId: currentGroupId };
+  if (editingVideoId) {
+    await updateVideo(editingVideoId, data);
+    showToast('Video updated');
+  } else {
+    data.order = Date.now();
+    await createVideo(data);
+    showToast('Video added');
+  }
+  closeVideoModal();
+  loadGroups();
+}
+
+async function deleteVideoConfirm(videoId, groupId) {
+  if (!confirm('Delete this video?')) return;
+  await deleteVideo(videoId);
+  showToast('Video deleted');
+  loadGroups();
 }
 
 // ===== QUESTIONS =====
@@ -231,11 +501,9 @@ function saveQuestion() {
   const topic = document.getElementById('qTopic').value.trim();
   const text = document.getElementById('qText').value.trim();
   const opts = ['qOption1','qOption2','qOption3','qOption4'].map(id => document.getElementById(id).value.trim());
-
   if (!text) { showToast('Enter a question', 'error'); return; }
   if (opts.some(o => !o)) { showToast('Fill all 4 options', 'error'); return; }
   if (!topic) { showToast('Enter a topic', 'error'); return; }
-
   const qData = { level, question: text, options: opts, answer: opts[0], topic };
   if (editingId) {
     const idx = questions.findIndex(q => q.id === editingId);
@@ -252,91 +520,6 @@ function saveQuestion() {
 
 function saveQuestionsToStorage() { localStorage.setItem('quizQuestions', JSON.stringify(questions)); }
 function loadQuestionsFromStorage() { const s = localStorage.getItem('quizQuestions'); if (s) questions = JSON.parse(s); }
-
-// ===== VIDEOS =====
-function getVideos() { const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}'); return settings.videos || []; }
-function saveVideosList(videos) { const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}'); settings.videos = videos; localStorage.setItem('siteSettings', JSON.stringify(settings)); }
-
-function renderVideoAdmin() {
-  const videos = getVideos();
-  const container = document.getElementById('videoListAdmin');
-  if (!container) return;
-  if (videos.length === 0) { container.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem;">No videos added yet.</p>'; return; }
-  container.innerHTML = videos.map((v, i) => `
-    <div class="video-admin-item">
-      <div class="video-admin-info">
-        <strong>${v.title}</strong>
-        <span style="color:var(--text-light);font-size:0.85rem;">
-          <span class="course-badge badge-${v.level === 'patente' ? 'patente' : v.level.toLowerCase()}" style="font-size:0.7rem;">${v.level}</span>
-          ${v.label ? ` - ${v.label}` : ''}
-          ${v.notesUrl ? ' <i class="fas fa-file-pdf" style="color:var(--danger);"></i>' : ''}
-        </span>
-      </div>
-      <div class="actions">
-        <button class="btn btn-secondary btn-sm" onclick="editVideo(${i})"><i class="fas fa-edit"></i></button>
-        <button class="btn btn-danger btn-sm" onclick="deleteVideo(${i})"><i class="fas fa-trash"></i></button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openVideoModal(title) {
-  document.getElementById('videoModalTitle').textContent = title || 'Add Video';
-  document.getElementById('videoModal').classList.add('active');
-}
-
-function closeVideoModal() {
-  document.getElementById('videoModal').classList.remove('active');
-  editingVideoIdx = null;
-  ['vTitle','vLevel','vLabel','vDescription','vUrl','vNotesUrl'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
-  });
-}
-
-function editVideo(idx) {
-  const videos = getVideos();
-  const v = videos[idx];
-  if (!v) return;
-  editingVideoIdx = idx;
-  document.getElementById('vTitle').value = v.title || '';
-  document.getElementById('vLevel').value = v.level || 'A2';
-  document.getElementById('vLabel').value = v.label || '';
-  document.getElementById('vDescription').value = v.description || '';
-  document.getElementById('vUrl').value = v.url || '';
-  document.getElementById('vNotesUrl').value = v.notesUrl || '';
-  openVideoModal('Edit Video');
-}
-
-function deleteVideo(idx) {
-  if (!confirm('Delete this video?')) return;
-  const videos = getVideos();
-  videos.splice(idx, 1);
-  saveVideosList(videos);
-  renderVideoAdmin();
-  showToast('Video deleted');
-}
-
-function saveVideo() {
-  const title = document.getElementById('vTitle').value.trim();
-  const level = document.getElementById('vLevel').value;
-  const label = document.getElementById('vLabel').value.trim();
-  const description = document.getElementById('vDescription').value.trim();
-  const url = document.getElementById('vUrl').value.trim();
-  const notesUrl = document.getElementById('vNotesUrl').value.trim();
-
-  if (!title) { showToast('Enter a title', 'error'); return; }
-  if (!url) { showToast('Enter a video URL', 'error'); return; }
-
-  const videoData = { title, level, label, description, url, notesUrl };
-  const videos = getVideos();
-  if (editingVideoIdx !== null) { videos[editingVideoIdx] = videoData; }
-  else { videos.push(videoData); }
-  saveVideosList(videos);
-  renderVideoAdmin();
-  closeVideoModal();
-  showToast(editingVideoIdx !== null ? 'Video updated' : 'Video added');
-}
 
 // ===== HISTORY =====
 function loadHistory() {
@@ -401,17 +584,26 @@ document.getElementById('cancelStudentModal').addEventListener('click', closeStu
 document.getElementById('saveStudent').addEventListener('click', saveStudent);
 document.getElementById('studentModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeStudentModal(); });
 
+document.getElementById('addGroupBtn').addEventListener('click', () => openGroupModal());
+document.getElementById('cancelGroupModal').addEventListener('click', closeGroupModal);
+document.getElementById('saveGroup').addEventListener('click', saveGroup);
+document.getElementById('groupModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeGroupModal(); });
+
+document.getElementById('cancelSectionModal').addEventListener('click', closeSectionModal);
+document.getElementById('saveSection').addEventListener('click', saveSection);
+document.getElementById('sectionModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeSectionModal(); });
+
+document.getElementById('cancelVideoModal').addEventListener('click', closeVideoModal);
+document.getElementById('saveVideo').addEventListener('click', saveVideo);
+document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeVideoModal(); });
+
 document.getElementById('addQuestionBtn').addEventListener('click', () => openModal());
 document.getElementById('cancelModal').addEventListener('click', closeModal);
 document.getElementById('saveQuestion').addEventListener('click', saveQuestion);
 document.getElementById('filterLevel').addEventListener('change', (e) => renderQuestions(e.target.value));
 document.getElementById('saveDates').addEventListener('click', saveSettings);
 document.getElementById('saveSocial').addEventListener('click', saveSettings);
-document.getElementById('addVideoBtn').addEventListener('click', () => openVideoModal());
-document.getElementById('cancelVideoModal').addEventListener('click', closeVideoModal);
-document.getElementById('saveVideo').addEventListener('click', saveVideo);
 document.getElementById('questionModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
-document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeVideoModal(); });
 
 const NAV_TOGGLE = document.getElementById('navToggle');
 const NAV_LINKS = document.getElementById('navLinks');
@@ -421,4 +613,3 @@ document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click
 loadQuestionsFromStorage();
 renderQuestions();
 loadSettings();
-renderVideoAdmin();
