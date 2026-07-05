@@ -55,7 +55,7 @@ async function loadStudents() {
   const noStudents = document.getElementById('noStudents');
   try {
     allGroups = await getGroups();
-    populateGroupSelect();
+    populateGroupCheckboxes();
     const students = await getAllStudents();
     const studentList = students.filter(s => s.role !== 'teacher');
     if (studentList.length === 0) {
@@ -98,11 +98,35 @@ async function loadStudents() {
   }
 }
 
-function populateGroupSelect() {
-  const select = document.getElementById('sGroup');
-  select.innerHTML = '';
-  allGroups.forEach(g => {
-    select.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+function populateGroupCheckboxes() {
+  const container = document.getElementById('sGroupCheckboxes');
+  if (allGroups.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem;">No groups created yet. Create groups first.</p>';
+    return;
+  }
+  const levels = ['A2', 'B1', 'patente'];
+  const levelLabels = { A2: 'Italian A2', B1: 'Italian B1', patente: 'Patente' };
+  let html = '';
+  for (const level of levels) {
+    const levelGroups = allGroups.filter(g => g.level === level);
+    if (levelGroups.length === 0) continue;
+    const badgeClass = level === 'patente' ? 'badge-patente' : `badge-${level.toLowerCase()}`;
+    html += `<div style="margin-bottom:0.75rem;"><div style="font-size:0.8rem;font-weight:600;color:var(--primary);margin-bottom:0.3rem;"><span class="course-badge ${badgeClass}" style="font-size:0.7rem;">${level}</span> ${levelLabels[level]}</div>`;
+    for (const g of levelGroups) {
+      html += `<label style="display:flex;align-items:center;gap:0.4rem;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.85rem;border-radius:var(--radius-sm);" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"><input type="checkbox" value="${g.id}" class="group-checkbox"> ${g.name}</label>`;
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function getSelectedGroupIds() {
+  return Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => cb.value);
+}
+
+function setSelectedGroups(groupIds) {
+  document.querySelectorAll('.group-checkbox').forEach(cb => {
+    cb.checked = groupIds.includes(cb.value);
   });
 }
 
@@ -114,14 +138,14 @@ function openStudentModal(title) {
 function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
   editingStudentUid = null;
-  ['sName','sEmail','sPhone','sLevel','sActive'].forEach(id => {
+  ['sName','sEmail','sPhone','sActive'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (el.tagName === 'SELECT') el.selectedIndex = 0;
       else el.value = '';
     }
   });
-  document.getElementById('sGroup').selectedIndex = -1;
+  document.querySelectorAll('.group-checkbox').forEach(cb => cb.checked = false);
   document.getElementById('sEmail').disabled = false;
 }
 
@@ -133,13 +157,9 @@ async function editStudent(uid) {
   document.getElementById('sEmail').value = profile.email || '';
   document.getElementById('sEmail').disabled = true;
   document.getElementById('sPhone').value = profile.phone || '';
-  document.getElementById('sLevel').value = profile.level || '';
   document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
   const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
-  const groupSelect = document.getElementById('sGroup');
-  for (const opt of groupSelect.options) {
-    opt.selected = groupIds.includes(opt.value);
-  }
+  setSelectedGroups(groupIds);
   openStudentModal('Edit Student');
 }
 
@@ -147,12 +167,16 @@ async function saveStudent() {
   const name = document.getElementById('sName').value.trim();
   const email = document.getElementById('sEmail').value.trim();
   const phone = document.getElementById('sPhone').value.trim();
-  const level = document.getElementById('sLevel').value;
-  const groupSelect = document.getElementById('sGroup');
-  const groupIds = Array.from(groupSelect.selectedOptions).map(opt => opt.value);
+  const groupIds = getSelectedGroupIds();
   const isActive = document.getElementById('sActive').value === 'true';
 
   if (!name) { showToast('Enter a name', 'error'); return; }
+
+  let level = '';
+  if (groupIds.length > 0) {
+    const firstGroup = allGroups.find(g => g.id === groupIds[0]);
+    if (firstGroup) level = firstGroup.level;
+  }
 
   if (editingStudentUid) {
     const updateData = { name, phone, level, groupIds, isActive };
@@ -681,6 +705,7 @@ function viewAsStudent(uid) {
 // ===== EVENTS =====
 document.getElementById('addStudentBtn').addEventListener('click', () => {
   document.getElementById('sEmail').disabled = false;
+  populateGroupCheckboxes();
   openStudentModal();
 });
 document.getElementById('cancelStudentModal').addEventListener('click', closeStudentModal);
