@@ -258,7 +258,6 @@ initFirebase().then(() => {
 
     document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
     document.getElementById('pendingNameDisplay').textContent = profile.name || user.email;
-    document.getElementById('videoLevelTabs').style.display = 'none';
 
     if (profile.groupId) {
       const group = await getGroup(profile.groupId);
@@ -268,11 +267,13 @@ initFirebase().then(() => {
         document.title = `${group.name} - Video Lessons`;
       }
       showSection('videosContent');
+      document.getElementById('videoLevelTabs').style.display = 'none';
       await renderGroupVideos(profile.groupId);
     } else {
       document.getElementById('groupNameDisplay').textContent = 'Video Lessons';
       document.getElementById('groupLevelDisplay').textContent = 'No group assigned. Please contact your teacher.';
       showSection('videosContent');
+      document.getElementById('videoLevelTabs').style.display = 'none';
       document.getElementById('videosEmpty').style.display = 'block';
     }
   });
