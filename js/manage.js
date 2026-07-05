@@ -86,6 +86,9 @@ async function loadStudents() {
           <button class="btn btn-sm" style="background:var(--primary-light);color:white;" onclick="resetStudentPassword('${s.email}')" title="Send password reset email">
             <i class="fas fa-key"></i>
           </button>
+          <button class="btn btn-sm" style="background:#8e44ad;color:white;" onclick="viewAsStudent('${s.uid}')" title="View as student">
+            <i class="fas fa-eye"></i>
+          </button>
           <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
         </td>
       </tr>`;
@@ -669,6 +672,10 @@ async function deleteTrickConfirm(trickId) {
   await deleteTrick(trickId);
   showToast('Trick deleted');
   loadTricks(document.getElementById('trickSearch').value);
+}
+
+function viewAsStudent(uid) {
+  window.open(`videos.html?viewAs=${uid}`, '_blank');
 }
 
 // ===== EVENTS =====

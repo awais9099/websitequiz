@@ -50,6 +50,84 @@ async function loadStudentTricks(filter = '') {
   }
 }
 
+async function renderStudentView(studentProfile) {
+  document.getElementById('studentNameDisplay').textContent = studentProfile.name || studentProfile.email;
+  document.getElementById('pendingNameDisplay').textContent = studentProfile.name || studentProfile.email;
+  document.getElementById('videoLevelTabs').style.display = 'none';
+  const groupIds = studentProfile.groupIds || (studentProfile.groupId ? [studentProfile.groupId] : []);
+  isPatenteStudent = false;
+  if (groupIds.length > 0) {
+    showSection('videosContent');
+    const container = document.getElementById('sectionsContainer');
+    container.innerHTML = '';
+    for (const gid of groupIds) {
+      const group = await getGroup(gid);
+      if (!group) continue;
+      if (group.level === 'patente') isPatenteStudent = true;
+      const sections = await getSections(gid);
+      if (sections.length === 0) continue;
+      const sorted = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+      let sectionsHtml = '';
+      for (const sec of sorted) {
+        const videos = await getVideos(sec.id);
+        const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
+        sectionsHtml += `
+          <div class="video-section-card">
+            <div class="video-section-header"><h3><i class="fas fa-book-open"></i> ${sec.title}</h3></div>
+            <div class="video-section-body">
+              ${sortedVideos.map(v => {
+                const embedUrl = getEmbedUrl(v.url);
+                const topicsHtml = v.topics ? `<div class="video-viewer-topics"><i class="fas fa-tags"></i> ${v.topics}</div>` : '';
+                const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Notes</a>` : '';
+                return `
+                  <div class="video-viewer-card">
+                    ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-viewer-thumb" onerror="this.style.display='none'">` : ''}
+                    <div class="video-viewer-info">
+                      <h4>${v.title}</h4>
+                      ${topicsHtml}
+                      ${v.description ? `<p class="video-viewer-desc">${v.description}</p>` : ''}
+                      <div class="video-viewer-actions">
+                        ${embedUrl ? `<button class="btn btn-primary btn-sm" onclick="playVideo('${embedUrl}','${v.title.replace(/'/g, "\\'")}')"><i class="fas fa-play"></i> Watch</button>` : ''}
+                        ${notesHtml}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+      const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
+      container.innerHTML += `
+        <div class="video-group-section">
+          <h2 style="margin-bottom:1rem;"><span class="course-badge ${badgeClass}">${group.level}</span> ${group.name}</h2>
+          ${sectionsHtml}
+        </div>
+      `;
+    }
+    if (groupIds.length === 1) {
+      const g = await getGroup(groupIds[0]);
+      if (g) {
+        document.getElementById('groupNameDisplay').textContent = g.name;
+        document.getElementById('groupLevelDisplay').textContent = `${g.level} Course`;
+      }
+    } else {
+      document.getElementById('groupNameDisplay').textContent = `${groupIds.length} Courses`;
+      document.getElementById('groupLevelDisplay').textContent = 'Enrolled courses';
+    }
+    if (isPatenteStudent) {
+      document.getElementById('patenteTricksTab').style.display = 'flex';
+    }
+  } else {
+    document.getElementById('groupNameDisplay').textContent = studentProfile.name || 'Student';
+    document.getElementById('groupLevelDisplay').textContent = 'No group assigned';
+    showSection('videosContent');
+    document.getElementById('videoLevelTabs').style.display = 'none';
+    document.getElementById('videosEmpty').style.display = 'block';
+  }
+}
+
 function getEmbedUrl(url) {
   if (!url) return null;
   if (url.includes('mediadelivery.net') || url.includes('bunny.net') || url.includes('b-cdn.net')) {
@@ -275,6 +353,24 @@ initFirebase().then(() => {
     if (profile && profile.role === 'teacher') {
       document.getElementById('navQuizLink').style.display = 'block';
       document.getElementById('navManageLink').style.display = 'block';
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const viewAsId = urlParams.get('viewAs');
+      if (viewAsId) {
+        const studentProfile = await getStudentProfile(viewAsId);
+        if (studentProfile) {
+          const banner = document.createElement('div');
+          banner.className = 'debug-banner';
+          banner.innerHTML = `
+            <strong><i class="fas fa-eye"></i> Viewing as: ${studentProfile.name || studentProfile.email}</strong>
+            <a href="videos.html" class="btn btn-sm"><i class="fas fa-arrow-left"></i> Back to Teacher</a>
+          `;
+          document.body.insertBefore(banner, document.body.firstChild);
+          renderStudentView(studentProfile);
+          return;
+        }
+      }
+
       document.getElementById('studentNameDisplay').textContent = profile.name || 'Teacher';
       document.getElementById('pendingNameDisplay').textContent = profile.name || 'Teacher';
       document.getElementById('groupNameDisplay').textContent = 'All Groups';

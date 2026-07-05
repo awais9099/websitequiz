@@ -812,6 +812,36 @@ a {
   padding: 2rem 1.5rem;
 }
 
+/* ===== DEBUG BANNER ===== */
+.debug-banner {
+  background: #8e44ad;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.debug-banner strong {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.debug-banner .btn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+.debug-banner .btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
 /* ===== VIDEO VIEWER ===== */
 .video-group-section {
   margin-bottom: 2rem;
