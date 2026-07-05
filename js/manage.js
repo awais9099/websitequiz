@@ -66,16 +66,15 @@ async function loadStudents() {
     noStudents.style.display = 'none';
     tbody.innerHTML = studentList.map(s => {
       const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
-      const groupNames = groupIds.map(gid => {
-        const g = allGroups.find(gr => gr.id === gid);
-        return g ? g.name : null;
-      }).filter(Boolean);
+      const groups = groupIds.map(gid => allGroups.find(gr => gr.id === gid)).filter(Boolean);
+      const groupNames = groups.map(g => g.name);
+      const levels = [...new Set(groups.map(g => g.level))].filter(Boolean);
       return `
       <tr>
         <td><strong>${s.name || 'N/A'}</strong></td>
         <td>${s.email || 'N/A'}</td>
         <td>${s.phone || 'N/A'}</td>
-        <td>${s.level ? `<span class="course-badge badge-${s.level === 'patente' ? 'patente' : s.level.toLowerCase()}">${s.level}</span>` : '<span style="color:var(--text-light);">Not set</span>'}</td>
+        <td>${levels.length > 0 ? levels.map(l => `<span class="course-badge badge-${l === 'patente' ? 'patente' : l.toLowerCase()}">${l}</span>`).join(' ') : '<span style="color:var(--text-light);">Not set</span>'}</td>
         <td>${groupNames.length > 0 ? groupNames.map(n => `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);display:block;">${n}</span>`).join('') : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
         <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
         <td class="actions">
