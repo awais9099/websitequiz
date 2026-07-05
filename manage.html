@@ -140,35 +140,16 @@
       </div>
 
       <div class="quiz-card" style="margin-top:1.5rem;">
-        <h3><i class="fab fa-youtube" style="color:#ff0000;"></i> Video Links (YouTube Embeds)</h3>
-        <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Paste YouTube video URLs. The embed player will appear on the landing page.</p>
-        <div id="videoInputs">
-          <div class="form-group video-input-row">
-            <label>Video 1 Title</label>
-            <input type="text" class="video-title" placeholder="e.g. Italian for Beginners - Lesson 1">
-            <label style="margin-top:0.5rem;">YouTube URL</label>
-            <input type="url" class="video-url" placeholder="https://www.youtube.com/watch?v=...">
-          </div>
-          <div class="form-group video-input-row">
-            <label>Video 2 Title</label>
-            <input type="text" class="video-title" placeholder="e.g. Italian A2 - Grammar Basics">
-            <label style="margin-top:0.5rem;">YouTube URL</label>
-            <input type="url" class="video-url" placeholder="https://www.youtube.com/watch?v=...">
-          </div>
-          <div class="form-group video-input-row">
-            <label>Video 3 Title</label>
-            <input type="text" class="video-title" placeholder="e.g. Patente - Road Signs Explained">
-            <label style="margin-top:0.5rem;">YouTube URL</label>
-            <input type="url" class="video-url" placeholder="https://www.youtube.com/watch?v=...">
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+          <h3 style="margin:0;border:none;padding:0;"><i class="fas fa-video" style="color:var(--danger);"></i> Video Library</h3>
+          <button class="btn btn-primary btn-sm" id="addVideoBtn">
+            <i class="fas fa-plus"></i> Add Video
+          </button>
         </div>
-        <button class="btn btn-primary btn-sm" id="saveVideos">
-          <i class="fas fa-save"></i> Save Videos
-        </button>
+        <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Add Bunny.net or YouTube video links with labels and optional PDF notes.</p>
+        <div id="videoListAdmin" class="video-list-admin"></div>
       </div>
     </div>
-
-  </div>
 
   <!-- ADD/EDIT QUESTION MODAL -->
   <div class="modal-overlay" id="questionModal">
@@ -210,6 +191,49 @@
         <button class="btn btn-outline" id="cancelModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
         <button class="btn btn-primary" id="saveQuestion">
           <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT VIDEO MODAL -->
+  <div class="modal-overlay" id="videoModal">
+    <div class="modal">
+      <h2 id="videoModalTitle">Add Video</h2>
+      <div class="form-group">
+        <label for="vTitle">Video Title</label>
+        <input type="text" id="vTitle" placeholder="e.g. Italian A2 - Lesson 1: Greetings">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="vLevel">Level</label>
+          <select id="vLevel">
+            <option value="A2">Italian A2</option>
+            <option value="B1">Italian B1</option>
+            <option value="patente">Patente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="vLabel">Label (optional)</label>
+          <input type="text" id="vLabel" placeholder="e.g. Lesson 1, Grammar, Vocabulary">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="vDescription">Description (optional)</label>
+        <textarea id="vDescription" rows="2" placeholder="Brief description of what this video covers"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="vUrl">Video URL (Bunny.net or YouTube)</label>
+        <input type="url" id="vUrl" placeholder="https://yourdomain.b-cdn.net/play/... or YouTube URL">
+      </div>
+      <div class="form-group">
+        <label for="vNotesUrl">PDF Notes URL (optional)</label>
+        <input type="url" id="vNotesUrl" placeholder="https://... (direct link to PDF file)">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelVideoModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveVideo">
+          <i class="fas fa-save"></i> Save Video
         </button>
       </div>
     </div>

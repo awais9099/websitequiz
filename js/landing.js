@@ -46,47 +46,6 @@ if (settings.youtubeLink) {
   });
 }
 
-// Load and render videos from settings
-function getYouTubeEmbed(url) {
-  if (!url) return null;
-  let videoId = '';
-  if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1].split('?')[0];
-  } else if (url.includes('youtube.com/watch')) {
-    videoId = new URLSearchParams(new URL(url).search).get('v');
-  } else if (url.includes('youtube.com/embed/')) {
-    videoId = url.split('youtube.com/embed/')[1].split('?')[0];
-  } else {
-    const parts = url.split('/');
-    videoId = parts[parts.length - 1].split('?')[0];
-  }
-  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-}
-
-function renderVideos() {
-  const videos = settings.videos || [];
-  const grid = document.getElementById('videosGrid');
-  if (!grid || videos.length === 0) return;
-
-  grid.innerHTML = videos.map(v => {
-    const embed = getYouTubeEmbed(v.url);
-    if (!embed) return '';
-    return `
-      <div class="video-card">
-        <div class="video-wrapper">
-          <iframe src="${embed}" title="${v.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-        </div>
-        <div class="video-info">
-          <h4>${v.title}</h4>
-          <span class="video-badge"><i class="fas fa-play-circle"></i> Watch Now</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-renderVideos();
-
 // Navbar scroll
 window.addEventListener('scroll', () => {
   NAVBAR.classList.toggle('scrolled', window.scrollY > 20);

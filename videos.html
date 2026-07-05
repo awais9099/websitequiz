@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Lessons - Learn Italian with Iqra</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#1a5276">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">Learn Italian <span>with Iqra</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="videos.html" class="active">Videos</a></li>
+      <li><a href="quiz.html">Quiz Tool</a></li>
+      <li><a href="manage.html">Manage</a></li>
+    </ul>
+  </nav>
+
+  <div class="videos-page">
+
+    <div class="videos-page-header">
+      <div class="container">
+        <h1><i class="fas fa-play-circle"></i> Video Lessons</h1>
+        <p>Watch recorded lectures and download study materials</p>
+        <div class="videos-filters" id="videoFilters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="A2">Italian A2</button>
+          <button class="filter-btn" data-filter="B1">Italian B1</button>
+          <button class="filter-btn" data-filter="patente">Patente</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container videos-page-content">
+      <div class="videos-list" id="videosList">
+        <!-- Videos loaded dynamically -->
+      </div>
+
+      <div class="videos-empty" id="videosEmpty" style="display:none;">
+        <i class="fas fa-video"></i>
+        <h3>No videos available yet</h3>
+        <p>Videos will appear here once added by the teacher.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">Learn Italian <span>with Iqra</span></div>
+        <p>&copy; 2026 Learn Italian with Iqra. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/videos.js"></script>
+</body>
+</html>

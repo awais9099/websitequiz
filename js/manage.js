@@ -1,6 +1,8 @@
 let questions = JSON.parse(JSON.stringify(window.QUESTIONS_DATA || []));
 let editingId = null;
+let editingVideoIdx = null;
 
+// ===== TABS =====
 const TABS = document.querySelectorAll('.manage-tab');
 const PANELS = document.querySelectorAll('.tab-panel');
 
@@ -10,22 +12,18 @@ TABS.forEach(tab => {
     PANELS.forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-
-    if (tab.dataset.tab === 'history') {
-      loadHistory();
-    }
+    if (tab.dataset.tab === 'history') loadHistory();
   });
 });
 
+// ===== QUESTIONS =====
 function renderQuestions(filter = 'all') {
   const tbody = document.getElementById('questionsBody');
   const filtered = filter === 'all' ? questions : questions.filter(q => q.level === filter);
-
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:2rem;">No questions found.</td></tr>`;
     return;
   }
-
   tbody.innerHTML = filtered.map((q, i) => `
     <tr>
       <td>${i + 1}</td>
@@ -34,38 +32,30 @@ function renderQuestions(filter = 'all') {
       <td>${q.topic}</td>
       <td>${q.answer}</td>
       <td class="actions">
-        <button class="btn btn-secondary btn-sm" onclick="editQuestion(${q.id})">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.id})">
-          <i class="fas fa-trash"></i>
-        </button>
+        <button class="btn btn-secondary btn-sm" onclick="editQuestion(${q.id})"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.id})"><i class="fas fa-trash"></i></button>
       </td>
     </tr>
   `).join('');
 }
 
-function openModal(title = 'Add Question') {
-  document.getElementById('modalTitle').textContent = title;
+function openModal(title) {
+  document.getElementById('modalTitle').textContent = title || 'Add Question';
   document.getElementById('questionModal').classList.add('active');
 }
 
 function closeModal() {
   document.getElementById('questionModal').classList.remove('active');
   editingId = null;
-  document.getElementById('qLevel').value = 'A2';
-  document.getElementById('qTopic').value = '';
-  document.getElementById('qText').value = '';
-  document.getElementById('qOption1').value = '';
-  document.getElementById('qOption2').value = '';
-  document.getElementById('qOption3').value = '';
-  document.getElementById('qOption4').value = '';
+  ['qLevel','qTopic','qText','qOption1','qOption2','qOption3','qOption4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+  });
 }
 
 function editQuestion(id) {
   const q = questions.find(q => q.id === id);
   if (!q) return;
-
   editingId = id;
   document.getElementById('qLevel').value = q.level;
   document.getElementById('qTopic').value = q.topic;
@@ -74,12 +64,11 @@ function editQuestion(id) {
   document.getElementById('qOption2').value = q.options[1] || '';
   document.getElementById('qOption3').value = q.options[2] || '';
   document.getElementById('qOption4').value = q.options[3] || '';
-
   openModal('Edit Question');
 }
 
 function deleteQuestion(id) {
-  if (!confirm('Are you sure you want to delete this question?')) return;
+  if (!confirm('Delete this question?')) return;
   questions = questions.filter(q => q.id !== id);
   saveQuestionsToStorage();
   renderQuestions(document.getElementById('filterLevel').value);
@@ -90,65 +79,139 @@ function saveQuestion() {
   const level = document.getElementById('qLevel').value;
   const topic = document.getElementById('qTopic').value.trim();
   const text = document.getElementById('qText').value.trim();
-  const opt1 = document.getElementById('qOption1').value.trim();
-  const opt2 = document.getElementById('qOption2').value.trim();
-  const opt3 = document.getElementById('qOption3').value.trim();
-  const opt4 = document.getElementById('qOption4').value.trim();
+  const opts = ['qOption1','qOption2','qOption3','qOption4'].map(id => document.getElementById(id).value.trim());
 
-  if (!text) { showToast('Please enter a question', 'error'); return; }
-  if (!opt1 || !opt2 || !opt3 || !opt4) { showToast('Please fill all 4 options', 'error'); return; }
-  if (!topic) { showToast('Please enter a topic', 'error'); return; }
+  if (!text) { showToast('Enter a question', 'error'); return; }
+  if (opts.some(o => !o)) { showToast('Fill all 4 options', 'error'); return; }
+  if (!topic) { showToast('Enter a topic', 'error'); return; }
 
-  const qData = {
-    level,
-    question: text,
-    options: [opt1, opt2, opt3, opt4],
-    answer: opt1,
-    topic
-  };
-
+  const qData = { level, question: text, options: opts, answer: opts[0], topic };
   if (editingId) {
     const idx = questions.findIndex(q => q.id === editingId);
-    if (idx !== -1) {
-      qData.id = editingId;
-      questions[idx] = qData;
-    }
+    if (idx !== -1) { qData.id = editingId; questions[idx] = qData; }
   } else {
     qData.id = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
     questions.push(qData);
   }
-
   saveQuestionsToStorage();
   renderQuestions(document.getElementById('filterLevel').value);
   closeModal();
   showToast(editingId ? 'Question updated' : 'Question added');
 }
 
-function saveQuestionsToStorage() {
-  localStorage.setItem('quizQuestions', JSON.stringify(questions));
+function saveQuestionsToStorage() { localStorage.setItem('quizQuestions', JSON.stringify(questions)); }
+function loadQuestionsFromStorage() { const s = localStorage.getItem('quizQuestions'); if (s) questions = JSON.parse(s); }
+
+// ===== VIDEOS =====
+function getVideos() {
+  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+  return settings.videos || [];
 }
 
-function loadQuestionsFromStorage() {
-  const stored = localStorage.getItem('quizQuestions');
-  if (stored) {
-    questions = JSON.parse(stored);
+function saveVideosList(videos) {
+  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+  settings.videos = videos;
+  localStorage.setItem('siteSettings', JSON.stringify(settings));
+}
+
+function renderVideoAdmin() {
+  const videos = getVideos();
+  const container = document.getElementById('videoListAdmin');
+  if (!container) return;
+
+  if (videos.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem;">No videos added yet. Click "Add Video" to get started.</p>';
+    return;
   }
+
+  container.innerHTML = videos.map((v, i) => `
+    <div class="video-admin-item">
+      <div class="video-admin-info">
+        <strong>${v.title}</strong>
+        <span style="color:var(--text-light);font-size:0.85rem;">
+          <span class="course-badge badge-${v.level === 'patente' ? 'patente' : v.level.toLowerCase()}" style="font-size:0.7rem;">${v.level}</span>
+          ${v.label ? ` - ${v.label}` : ''}
+          ${v.notesUrl ? ' <i class="fas fa-file-pdf" style="color:var(--danger);"></i>' : ''}
+        </span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary btn-sm" onclick="editVideo(${i})"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVideo(${i})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
 }
 
+function openVideoModal(title) {
+  document.getElementById('videoModalTitle').textContent = title || 'Add Video';
+  document.getElementById('videoModal').classList.add('active');
+}
+
+function closeVideoModal() {
+  document.getElementById('videoModal').classList.remove('active');
+  editingVideoIdx = null;
+  ['vTitle','vLevel','vLabel','vDescription','vUrl','vNotesUrl'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+  });
+}
+
+function editVideo(idx) {
+  const videos = getVideos();
+  const v = videos[idx];
+  if (!v) return;
+  editingVideoIdx = idx;
+  document.getElementById('vTitle').value = v.title || '';
+  document.getElementById('vLevel').value = v.level || 'A2';
+  document.getElementById('vLabel').value = v.label || '';
+  document.getElementById('vDescription').value = v.description || '';
+  document.getElementById('vUrl').value = v.url || '';
+  document.getElementById('vNotesUrl').value = v.notesUrl || '';
+  openVideoModal('Edit Video');
+}
+
+function deleteVideo(idx) {
+  if (!confirm('Delete this video?')) return;
+  const videos = getVideos();
+  videos.splice(idx, 1);
+  saveVideosList(videos);
+  renderVideoAdmin();
+  showToast('Video deleted');
+}
+
+function saveVideo() {
+  const title = document.getElementById('vTitle').value.trim();
+  const level = document.getElementById('vLevel').value;
+  const label = document.getElementById('vLabel').value.trim();
+  const description = document.getElementById('vDescription').value.trim();
+  const url = document.getElementById('vUrl').value.trim();
+  const notesUrl = document.getElementById('vNotesUrl').value.trim();
+
+  if (!title) { showToast('Enter a title', 'error'); return; }
+  if (!url) { showToast('Enter a video URL', 'error'); return; }
+
+  const videoData = { title, level, label, description, url, notesUrl };
+  const videos = getVideos();
+
+  if (editingVideoIdx !== null) {
+    videos[editingVideoIdx] = videoData;
+  } else {
+    videos.push(videoData);
+  }
+  saveVideosList(videos);
+  renderVideoAdmin();
+  closeVideoModal();
+  showToast(editingVideoIdx !== null ? 'Video updated' : 'Video added');
+}
+
+// ===== HISTORY =====
 function loadHistory() {
   const sessions = JSON.parse(localStorage.getItem('quizSessions') || '[]');
   const tbody = document.getElementById('historyBody');
   const noHistory = document.getElementById('noHistory');
-
-  if (sessions.length === 0) {
-    tbody.innerHTML = '';
-    noHistory.style.display = 'block';
-    return;
-  }
-
+  if (sessions.length === 0) { tbody.innerHTML = ''; noHistory.style.display = 'block'; return; }
   noHistory.style.display = 'none';
-
-  tbody.innerHTML = sessions.reverse().map(s => `
+  tbody.innerHTML = sessions.slice().reverse().map(s => `
     <tr>
       <td>${new Date(s.date).toLocaleDateString('en-GB')}</td>
       <td>${s.name}</td>
@@ -159,22 +222,7 @@ function loadHistory() {
   `).join('');
 }
 
-function showToast(message, type = 'success') {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
+// ===== SETTINGS =====
 function loadSettings() {
   const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
   document.getElementById('dateA2').value = settings.dateA2 || '';
@@ -183,14 +231,6 @@ function loadSettings() {
   document.getElementById('whatsappLink').value = settings.whatsappLink || '';
   document.getElementById('tiktokLink').value = settings.tiktokLink || '';
   document.getElementById('youtubeLink').value = settings.youtubeLink || '';
-
-  const videos = settings.videos || [];
-  const videoTitles = document.querySelectorAll('.video-title');
-  const videoUrls = document.querySelectorAll('.video-url');
-  videos.forEach((v, i) => {
-    if (videoTitles[i]) videoTitles[i].value = v.title || '';
-    if (videoUrls[i]) videoUrls[i].value = v.url || '';
-  });
 }
 
 function saveSettings() {
@@ -206,34 +246,31 @@ function saveSettings() {
   showToast('Settings saved');
 }
 
-function saveVideos() {
-  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
-  const videoTitles = document.querySelectorAll('.video-title');
-  const videoUrls = document.querySelectorAll('.video-url');
-  const videos = [];
-  videoTitles.forEach((title, i) => {
-    const url = videoUrls[i] ? videoUrls[i].value.trim() : '';
-    const titleVal = title.value.trim();
-    if (url) {
-      videos.push({ title: titleVal || 'Untitled Video', url });
-    }
-  });
-  settings.videos = videos;
-  localStorage.setItem('siteSettings', JSON.stringify(settings));
-  showToast('Videos saved');
+// ===== TOAST =====
+function showToast(message, type = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+// ===== EVENTS =====
 document.getElementById('addQuestionBtn').addEventListener('click', () => openModal());
 document.getElementById('cancelModal').addEventListener('click', closeModal);
 document.getElementById('saveQuestion').addEventListener('click', saveQuestion);
 document.getElementById('filterLevel').addEventListener('change', (e) => renderQuestions(e.target.value));
 document.getElementById('saveDates').addEventListener('click', saveSettings);
 document.getElementById('saveSocial').addEventListener('click', saveSettings);
-document.getElementById('saveVideos').addEventListener('click', saveVideos);
+document.getElementById('addVideoBtn').addEventListener('click', () => openVideoModal());
+document.getElementById('cancelVideoModal').addEventListener('click', closeVideoModal);
+document.getElementById('saveVideo').addEventListener('click', saveVideo);
 
-document.getElementById('questionModal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
+document.getElementById('questionModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeVideoModal(); });
 
 const NAV_TOGGLE = document.getElementById('navToggle');
 const NAV_LINKS = document.getElementById('navLinks');
@@ -243,3 +280,4 @@ document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click
 loadQuestionsFromStorage();
 renderQuestions();
 loadSettings();
+renderVideoAdmin();
