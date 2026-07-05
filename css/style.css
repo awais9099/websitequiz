@@ -763,6 +763,9 @@ a {
 .social-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
 .social-instagram:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(220,39,67,0.4); }
 
+.social-youtube { background: #ff0000; }
+.social-youtube:hover { background: #cc0000; transform: translateY(-4px); box-shadow: 0 8px 25px rgba(255,0,0,0.4); }
+
 /* ===== FOOTER ===== */
 .footer {
   background: var(--primary-dark);
@@ -810,6 +813,10 @@ a {
 .footer-socials a:hover {
   background: var(--accent);
   transform: translateY(-2px);
+}
+
+.footer-socials a[aria-label="YouTube"]:hover {
+  background: #ff0000;
 }
 
 /* ===== FLOATING WHATSAPP ===== */

@@ -182,7 +182,7 @@ function loadSettings() {
   document.getElementById('datePatente').value = settings.datePatente || '';
   document.getElementById('whatsappLink').value = settings.whatsappLink || '';
   document.getElementById('tiktokLink').value = settings.tiktokLink || '';
-  document.getElementById('instagramLink').value = settings.instagramLink || '';
+  document.getElementById('youtubeLink').value = settings.youtubeLink || '';
 }
 
 function saveSettings() {
@@ -192,7 +192,7 @@ function saveSettings() {
     datePatente: document.getElementById('datePatente').value,
     whatsappLink: document.getElementById('whatsappLink').value,
     tiktokLink: document.getElementById('tiktokLink').value,
-    instagramLink: document.getElementById('instagramLink').value
+    youtubeLink: document.getElementById('youtubeLink').value
   };
   localStorage.setItem('siteSettings', JSON.stringify(settings));
   showToast('Settings saved');

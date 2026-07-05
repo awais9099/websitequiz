@@ -45,6 +45,11 @@ if (settings.instagramLink) {
     a.href = settings.instagramLink;
   });
 }
+if (settings.youtubeLink) {
+  document.querySelectorAll('a[href*="youtube.com"]').forEach(a => {
+    a.href = settings.youtubeLink;
+  });
+}
 
 // Navbar scroll
 window.addEventListener('scroll', () => {
