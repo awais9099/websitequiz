@@ -193,3 +193,22 @@ async function updateVideo(videoId, data) {
 async function deleteVideo(videoId) {
   return firebaseDb.collection('videos').doc(videoId).delete();
 }
+
+// ===== PATENTE TRICKS =====
+async function createTrick(data) {
+  const ref = await firebaseDb.collection('patenteTricks').add(data);
+  return ref.id;
+}
+
+async function getAllTricks() {
+  const snapshot = await firebaseDb.collection('patenteTricks').get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function updateTrick(trickId, data) {
+  return firebaseDb.collection('patenteTricks').doc(trickId).update(data);
+}
+
+async function deleteTrick(trickId) {
+  return firebaseDb.collection('patenteTricks').doc(trickId).delete();
+}

@@ -5,6 +5,50 @@ document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click
 
 let currentUser = null;
 let currentProfile = null;
+let isPatenteStudent = false;
+
+function showVideosTab(tab) {
+  const sectionsContainer = document.getElementById('sectionsContainer');
+  const tricksContent = document.getElementById('tricksContent');
+  const videosEmpty = document.getElementById('videosEmpty');
+  const tabs = document.querySelectorAll('#patenteTricksTab .filter-btn');
+  tabs.forEach(t => t.classList.remove('active'));
+  document.querySelector(`#patenteTricksTab [data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'videos') {
+    sectionsContainer.style.display = 'block';
+    tricksContent.style.display = 'none';
+  } else {
+    sectionsContainer.style.display = 'none';
+    tricksContent.style.display = 'block';
+    loadStudentTricks();
+  }
+}
+
+async function loadStudentTricks(filter = '') {
+  const container = document.getElementById('tricksContainerStudent');
+  const noTricks = document.getElementById('noTricksStudent');
+  try {
+    let tricks = await getAllTricks();
+    if (filter) {
+      tricks = tricks.filter(t => t.word.toLowerCase().includes(filter.toLowerCase()));
+    }
+    if (tricks.length === 0) {
+      container.innerHTML = '';
+      noTricks.style.display = 'block';
+      return;
+    }
+    noTricks.style.display = 'none';
+    container.innerHTML = tricks.map(t => `
+      <div class="video-viewer-card" style="flex-direction:column;">
+        ${t.imageUrl ? `<img src="${t.imageUrl}" style="width:100%;max-width:400px;border-radius:var(--radius-sm);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+        <h4 style="color:var(--primary);margin:0 0 0.3rem;"><i class="fas fa-lightbulb" style="color:var(--gold);"></i> ${t.word}</h4>
+        <p style="margin:0;font-size:0.9rem;color:var(--text);line-height:1.6;">${t.description}</p>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--danger);text-align:center;padding:2rem;">Error loading tricks: ${err.message}</p>`;
+  }
+}
 
 function getEmbedUrl(url) {
   if (!url) return null;
@@ -260,6 +304,7 @@ initFirebase().then(() => {
     document.getElementById('pendingNameDisplay').textContent = profile.name || user.email;
 
     const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
+    isPatenteStudent = false;
     if (groupIds.length > 0) {
       showSection('videosContent');
       document.getElementById('videoLevelTabs').style.display = 'none';
@@ -268,6 +313,7 @@ initFirebase().then(() => {
       for (const gid of groupIds) {
         const group = await getGroup(gid);
         if (!group) continue;
+        if (group.level === 'patente') isPatenteStudent = true;
         const sections = await getSections(gid);
         if (sections.length === 0) continue;
         const sorted = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -322,6 +368,9 @@ initFirebase().then(() => {
         document.getElementById('groupLevelDisplay').textContent = 'Your enrolled courses';
         document.title = 'My Courses - Video Lessons';
       }
+      if (isPatenteStudent) {
+        document.getElementById('patenteTricksTab').style.display = 'flex';
+      }
     } else {
       document.getElementById('groupNameDisplay').textContent = 'Video Lessons';
       document.getElementById('groupLevelDisplay').textContent = 'No group assigned. Please contact your teacher.';
@@ -330,4 +379,8 @@ initFirebase().then(() => {
       document.getElementById('videosEmpty').style.display = 'block';
     }
   });
+});
+
+document.getElementById('trickSearchStudent').addEventListener('input', (e) => {
+  loadStudentTricks(e.target.value);
 });

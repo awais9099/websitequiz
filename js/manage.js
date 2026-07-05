@@ -45,6 +45,7 @@ TABS.forEach(tab => {
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'students') loadStudents();
     if (tab.dataset.tab === 'groups') loadGroups();
+    if (tab.dataset.tab === 'tricks') loadTricks();
   });
 });
 
@@ -583,6 +584,93 @@ function showToast(message, type = 'success') {
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+// ===== PATENTE TRICKS =====
+let editingTrickId = null;
+
+async function loadTricks(filter = '') {
+  const container = document.getElementById('tricksContainer');
+  const noTricks = document.getElementById('noTricks');
+  try {
+    let tricks = await getAllTricks();
+    if (filter) {
+      tricks = tricks.filter(t => t.word.toLowerCase().includes(filter.toLowerCase()));
+    }
+    if (tricks.length === 0) {
+      container.innerHTML = '';
+      noTricks.style.display = 'block';
+      return;
+    }
+    noTricks.style.display = 'none';
+    container.innerHTML = tricks.map(t => `
+      <div class="video-item" style="align-items:flex-start;">
+        <div class="video-item-info" style="gap:0.5rem;">
+          ${t.imageUrl ? `<img src="${t.imageUrl}" style="width:100%;max-width:300px;border-radius:var(--radius-sm);margin-bottom:0.5rem;" onerror="this.style.display='none'">` : ''}
+          <div>
+            <strong style="color:var(--primary);font-size:1rem;">${t.word}</strong>
+            <p style="margin:0.3rem 0 0;font-size:0.85rem;color:var(--text);line-height:1.5;">${t.description}</p>
+          </div>
+        </div>
+        <div class="group-actions" style="flex-shrink:0;">
+          <button class="btn btn-secondary btn-sm" onclick="editTrick('${t.id}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTrickConfirm('${t.id}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--danger);text-align:center;padding:2rem;">Error loading tricks: ${err.message}</p>`;
+  }
+}
+
+function openTrickModal(title) {
+  document.getElementById('trickModalTitle').textContent = title || 'Add Trick';
+  document.getElementById('trickModal').classList.add('active');
+}
+
+function closeTrickModal() {
+  document.getElementById('trickModal').classList.remove('active');
+  editingTrickId = null;
+  document.getElementById('tWord').value = '';
+  document.getElementById('tDescription').value = '';
+  document.getElementById('tImageUrl').value = '';
+}
+
+async function editTrick(trickId) {
+  const tricks = await getAllTricks();
+  const trick = tricks.find(t => t.id === trickId);
+  if (!trick) return;
+  editingTrickId = trickId;
+  document.getElementById('tWord').value = trick.word || '';
+  document.getElementById('tDescription').value = trick.description || '';
+  document.getElementById('tImageUrl').value = trick.imageUrl || '';
+  openTrickModal('Edit Trick');
+}
+
+async function saveTrick() {
+  const word = document.getElementById('tWord').value.trim();
+  const description = document.getElementById('tDescription').value.trim();
+  const imageUrl = document.getElementById('tImageUrl').value.trim();
+  if (!word) { showToast('Enter a word', 'error'); return; }
+  if (!description) { showToast('Enter a description', 'error'); return; }
+  const data = { word, description, imageUrl, updatedAt: new Date().toISOString() };
+  if (editingTrickId) {
+    await updateTrick(editingTrickId, data);
+    showToast('Trick updated');
+  } else {
+    data.createdAt = new Date().toISOString();
+    await createTrick(data);
+    showToast('Trick added');
+  }
+  closeTrickModal();
+  loadTricks(document.getElementById('trickSearch').value);
+}
+
+async function deleteTrickConfirm(trickId) {
+  if (!confirm('Delete this trick?')) return;
+  await deleteTrick(trickId);
+  showToast('Trick deleted');
+  loadTricks(document.getElementById('trickSearch').value);
+}
+
 // ===== EVENTS =====
 document.getElementById('addStudentBtn').addEventListener('click', () => {
   document.getElementById('sEmail').disabled = false;
@@ -612,6 +700,12 @@ document.getElementById('filterLevel').addEventListener('change', (e) => renderQ
 document.getElementById('saveDates').addEventListener('click', saveSettings);
 document.getElementById('saveSocial').addEventListener('click', saveSettings);
 document.getElementById('questionModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
+
+document.getElementById('addTrickBtn').addEventListener('click', () => openTrickModal());
+document.getElementById('cancelTrickModal').addEventListener('click', closeTrickModal);
+document.getElementById('saveTrick').addEventListener('click', saveTrick);
+document.getElementById('trickModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeTrickModal(); });
+document.getElementById('trickSearch').addEventListener('input', (e) => loadTricks(e.target.value));
 
 const NAV_TOGGLE = document.getElementById('navToggle');
 const NAV_LINKS = document.getElementById('navLinks');

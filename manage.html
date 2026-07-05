@@ -60,6 +60,9 @@
         <button class="manage-tab" data-tab="settings">
           <i class="fas fa-cog"></i> Settings
         </button>
+        <button class="manage-tab" data-tab="tricks">
+          <i class="fas fa-lightbulb"></i> Patente Tricks
+        </button>
       </div>
     </div>
   </div>
@@ -201,6 +204,22 @@
           <i class="fas fa-save"></i> Save Links
         </button>
       </div>
+    </div>
+
+    <!-- PATENTE TRICKS TAB -->
+    <div class="tab-panel" id="tab-tricks">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h2 style="font-size:1.25rem;">Patente Tricks</h2>
+        <button class="btn btn-primary btn-sm" id="addTrickBtn">
+          <i class="fas fa-plus"></i> Add Trick
+        </button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Add tricks and tips for patente students. These help students remember key words and rules.</p>
+      <div class="form-group" style="max-width:400px;margin-bottom:1.5rem;">
+        <input type="text" id="trickSearch" placeholder="Search tricks by word...">
+      </div>
+      <div id="tricksContainer"></div>
+      <p id="noTricks" style="text-align:center;color:var(--text-light);padding:2rem;display:none;">No tricks added yet.</p>
     </div>
 
   <!-- ADD/EDIT STUDENT MODAL -->
@@ -372,6 +391,31 @@
         <button class="btn btn-outline" id="cancelVideoModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
         <button class="btn btn-primary" id="saveVideo">
           <i class="fas fa-save"></i> Save Video
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT TRICK MODAL -->
+  <div class="modal-overlay" id="trickModal">
+    <div class="modal">
+      <h2 id="trickModalTitle">Add Trick</h2>
+      <div class="form-group">
+        <label for="tWord">Word / Phrase</label>
+        <input type="text" id="tWord" placeholder="e.g. moderata, sempre, mai">
+      </div>
+      <div class="form-group">
+        <label for="tDescription">Description / Trick</label>
+        <textarea id="tDescription" rows="4" placeholder="e.g. 'moderata' always means TRUE in patente questions"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="tImageUrl">Image URL (optional)</label>
+        <input type="url" id="tImageUrl" placeholder="https://... (direct link to image)">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelTrickModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveTrick">
+          <i class="fas fa-save"></i> Save
         </button>
       </div>
     </div>
