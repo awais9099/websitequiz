@@ -1,6 +1,32 @@
 let questions = JSON.parse(JSON.stringify(window.QUESTIONS_DATA || []));
 let editingId = null;
 let editingVideoIdx = null;
+let editingStudentUid = null;
+let isTeacher = false;
+
+// ===== AUTH CHECK =====
+initFirebase().then(() => {
+  onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+    const profile = await getStudentProfile(user.uid);
+    if (!profile || profile.role !== 'teacher') {
+      window.location.href = 'videos.html';
+      return;
+    }
+    isTeacher = true;
+    document.getElementById('manageLoading').style.display = 'none';
+    document.getElementById('manageContent').style.display = 'block';
+    loadStudents();
+  });
+});
+
+document.getElementById('manageLogoutBtn').addEventListener('click', async () => {
+  await signOut();
+  window.location.href = 'index.html';
+});
 
 // ===== TABS =====
 const TABS = document.querySelectorAll('.manage-tab');
@@ -13,8 +39,126 @@ TABS.forEach(tab => {
     tab.classList.add('active');
     document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
     if (tab.dataset.tab === 'history') loadHistory();
+    if (tab.dataset.tab === 'students') loadStudents();
   });
 });
+
+// ===== STUDENTS =====
+async function loadStudents() {
+  const tbody = document.getElementById('studentsBody');
+  const noStudents = document.getElementById('noStudents');
+  try {
+    const students = await getAllStudents();
+    const studentList = students.filter(s => s.role !== 'teacher');
+    if (studentList.length === 0) {
+      tbody.innerHTML = '';
+      noStudents.style.display = 'block';
+      return;
+    }
+    noStudents.style.display = 'none';
+    tbody.innerHTML = studentList.map(s => `
+      <tr>
+        <td><strong>${s.name || 'N/A'}</strong></td>
+        <td>${s.email || 'N/A'}</td>
+        <td>${s.phone || 'N/A'}</td>
+        <td>${s.level ? `<span class="course-badge badge-${s.level === 'patente' ? 'patente' : s.level.toLowerCase()}">${s.level}</span>` : '<span style="color:var(--text-light);">Not set</span>'}</td>
+        <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
+        <td class="actions">
+          <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm" style="background:${s.isActive ? 'var(--warning)' : 'var(--accent)'};color:white;" onclick="toggleStudentActive('${s.uid}', ${!s.isActive})">
+            <i class="fas fa-${s.isActive ? 'ban' : 'check'}"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem;">Error loading students: ${err.message}</td></tr>`;
+  }
+}
+
+function openStudentModal(title) {
+  document.getElementById('studentModalTitle').textContent = title || 'Add Student';
+  document.getElementById('studentModal').classList.add('active');
+}
+
+function closeStudentModal() {
+  document.getElementById('studentModal').classList.remove('active');
+  editingStudentUid = null;
+  ['sName','sEmail','sPassword','sPhone','sLevel','sActive'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+    }
+  });
+}
+
+async function editStudent(uid) {
+  const profile = await getStudentProfile(uid);
+  if (!profile) return;
+  editingStudentUid = uid;
+  document.getElementById('sName').value = profile.name || '';
+  document.getElementById('sEmail').value = profile.email || '';
+  document.getElementById('sEmail').disabled = true;
+  document.getElementById('sPassword').value = '';
+  document.getElementById('sPassword').placeholder = 'Leave blank to keep current';
+  document.getElementById('sPhone').value = profile.phone || '';
+  document.getElementById('sLevel').value = profile.level || '';
+  document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
+  openStudentModal('Edit Student');
+}
+
+async function saveStudent() {
+  const name = document.getElementById('sName').value.trim();
+  const email = document.getElementById('sEmail').value.trim();
+  const password = document.getElementById('sPassword').value;
+  const phone = document.getElementById('sPhone').value.trim();
+  const level = document.getElementById('sLevel').value;
+  const isActive = document.getElementById('sActive').value === 'true';
+
+  if (!name) { showToast('Enter a name', 'error'); return; }
+
+  if (editingStudentUid) {
+    const updateData = { name, phone, level, isActive };
+    await updateStudentProfile(editingStudentUid, updateData);
+    showToast('Student updated');
+  } else {
+    if (!email) { showToast('Enter an email', 'error'); return; }
+    if (!password || password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+    try {
+      const cred = await signUpWithEmail(email, password);
+      await createStudentProfile(cred.user.uid, {
+        name, email, phone, level, isActive,
+        role: 'student',
+        createdAt: new Date().toISOString()
+      });
+      showToast('Student created');
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        showToast('This email is already registered', 'error');
+      } else {
+        showToast('Error creating student: ' + err.message, 'error');
+      }
+      return;
+    }
+  }
+  closeStudentModal();
+  loadStudents();
+}
+
+async function toggleStudentActive(uid, newActive) {
+  await updateStudentProfile(uid, { isActive: newActive });
+  showToast(`Student ${newActive ? 'activated' : 'deactivated'}`);
+  loadStudents();
+}
+
+async function deleteStudent(uid) {
+  if (!confirm('Delete this student account? This cannot be undone.')) return;
+  await deleteStudentProfile(uid);
+  showToast('Student deleted');
+  loadStudents();
+}
 
 // ===== QUESTIONS =====
 function renderQuestions(filter = 'all') {
@@ -103,27 +247,14 @@ function saveQuestionsToStorage() { localStorage.setItem('quizQuestions', JSON.s
 function loadQuestionsFromStorage() { const s = localStorage.getItem('quizQuestions'); if (s) questions = JSON.parse(s); }
 
 // ===== VIDEOS =====
-function getVideos() {
-  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
-  return settings.videos || [];
-}
-
-function saveVideosList(videos) {
-  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
-  settings.videos = videos;
-  localStorage.setItem('siteSettings', JSON.stringify(settings));
-}
+function getVideos() { const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}'); return settings.videos || []; }
+function saveVideosList(videos) { const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}'); settings.videos = videos; localStorage.setItem('siteSettings', JSON.stringify(settings)); }
 
 function renderVideoAdmin() {
   const videos = getVideos();
   const container = document.getElementById('videoListAdmin');
   if (!container) return;
-
-  if (videos.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem;">No videos added yet. Click "Add Video" to get started.</p>';
-    return;
-  }
-
+  if (videos.length === 0) { container.innerHTML = '<p style="text-align:center;color:var(--text-light);padding:2rem;">No videos added yet.</p>'; return; }
   container.innerHTML = videos.map((v, i) => `
     <div class="video-admin-item">
       <div class="video-admin-info">
@@ -192,12 +323,8 @@ function saveVideo() {
 
   const videoData = { title, level, label, description, url, notesUrl };
   const videos = getVideos();
-
-  if (editingVideoIdx !== null) {
-    videos[editingVideoIdx] = videoData;
-  } else {
-    videos.push(videoData);
-  }
+  if (editingVideoIdx !== null) { videos[editingVideoIdx] = videoData; }
+  else { videos.push(videoData); }
   saveVideosList(videos);
   renderVideoAdmin();
   closeVideoModal();
@@ -259,6 +386,15 @@ function showToast(message, type = 'success') {
 }
 
 // ===== EVENTS =====
+document.getElementById('addStudentBtn').addEventListener('click', () => {
+  document.getElementById('sEmail').disabled = false;
+  document.getElementById('sPassword').placeholder = 'Minimum 6 characters';
+  openStudentModal();
+});
+document.getElementById('cancelStudentModal').addEventListener('click', closeStudentModal);
+document.getElementById('saveStudent').addEventListener('click', saveStudent);
+document.getElementById('studentModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeStudentModal(); });
+
 document.getElementById('addQuestionBtn').addEventListener('click', () => openModal());
 document.getElementById('cancelModal').addEventListener('click', closeModal);
 document.getElementById('saveQuestion').addEventListener('click', saveQuestion);
@@ -268,7 +404,6 @@ document.getElementById('saveSocial').addEventListener('click', saveSettings);
 document.getElementById('addVideoBtn').addEventListener('click', () => openVideoModal());
 document.getElementById('cancelVideoModal').addEventListener('click', closeVideoModal);
 document.getElementById('saveVideo').addEventListener('click', saveVideo);
-
 document.getElementById('questionModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeVideoModal(); });
 

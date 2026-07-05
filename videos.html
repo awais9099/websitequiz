@@ -20,41 +20,97 @@
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="videos.html" class="active">Videos</a></li>
-      <li><a href="quiz.html">Quiz Tool</a></li>
-      <li><a href="manage.html">Manage</a></li>
+      <li id="navQuizLink" style="display:none;"><a href="quiz.html">Quiz Tool</a></li>
+      <li id="navManageLink" style="display:none;"><a href="manage.html">Manage</a></li>
     </ul>
   </nav>
 
-  <div class="videos-page">
+  <!-- LOADING STATE -->
+  <div class="auth-page auth-page-nav" id="loadingState">
+    <div class="auth-container">
+      <div class="auth-card" style="text-align:center;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);margin-bottom:1rem;"></i>
+        <p>Loading...</p>
+      </div>
+    </div>
+  </div>
 
-    <div class="videos-page-header">
-      <div class="container">
-        <h1><i class="fas fa-play-circle"></i> Video Lessons</h1>
-        <p>Watch recorded lectures and download study materials</p>
-        <div class="videos-filters" id="videoFilters">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="A2">Italian A2</button>
-          <button class="filter-btn" data-filter="B1">Italian B1</button>
-          <button class="filter-btn" data-filter="patente">Patente</button>
+  <!-- NOT LOGGED IN -->
+  <div class="auth-page auth-page-nav" id="notLoggedIn" style="display:none;">
+    <div class="auth-container">
+      <div class="auth-card" style="text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+          <i class="fas fa-lock" style="font-size:1.5rem;color:white;"></i>
+        </div>
+        <h1 style="font-size:1.4rem;margin-bottom:0.5rem;">Login Required</h1>
+        <p style="color:var(--text-light);margin-bottom:1.5rem;">You need to be a registered student to access video lessons.</p>
+        <a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:0.75rem;">
+          <i class="fas fa-sign-in-alt"></i> Student Login
+        </a>
+        <a href="index.html" class="btn btn-outline" style="color:var(--text);border-color:var(--border);width:100%;justify-content:center;">
+          <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOT ACTIVE (not paid) -->
+  <div class="auth-page auth-page-nav" id="notActive" style="display:none;">
+    <div class="auth-container">
+      <div class="auth-card" style="text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--warning),#f1c40f);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+          <i class="fas fa-clock" style="font-size:1.5rem;color:white;"></i>
+        </div>
+        <h1 style="font-size:1.4rem;margin-bottom:0.5rem;">Account Pending</h1>
+        <p style="color:var(--text-light);margin-bottom:1rem;">Your account is not yet activated. Please contact the teacher to activate your access.</p>
+        <a href="https://wa.me/393517080455" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:0.75rem;background:#25d366;">
+          <i class="fab fa-whatsapp"></i> Contact on WhatsApp
+        </a>
+        <button class="btn btn-outline" id="logoutBtn" style="color:var(--text);border-color:var(--border);width:100%;justify-content:center;">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEOS CONTENT (shown when logged in + active) -->
+  <div id="videosContent" style="display:none;">
+    <div class="videos-page">
+      <div class="videos-page-header">
+        <div class="container">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+            <div>
+              <h1><i class="fas fa-play-circle"></i> Video Lessons</h1>
+              <p>Watch recorded lectures and download study materials</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <span id="studentNameDisplay" style="color:rgba(255,255,255,0.8);font-size:0.9rem;"></span>
+              <button class="btn btn-sm" id="logoutBtnTop" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+            </div>
+          </div>
+          <div class="videos-filters" id="videoFilters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="A2">Italian A2</button>
+            <button class="filter-btn" data-filter="B1">Italian B1</button>
+            <button class="filter-btn" data-filter="patente">Patente</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="container videos-page-content">
+        <div class="videos-list" id="videosList"></div>
+        <div class="videos-empty" id="videosEmpty" style="display:none;">
+          <i class="fas fa-video"></i>
+          <h3>No videos available yet</h3>
+          <p>Videos will appear here once added by the teacher.</p>
         </div>
       </div>
     </div>
-
-    <div class="container videos-page-content">
-      <div class="videos-list" id="videosList">
-        <!-- Videos loaded dynamically -->
-      </div>
-
-      <div class="videos-empty" id="videosEmpty" style="display:none;">
-        <i class="fas fa-video"></i>
-        <h3>No videos available yet</h3>
-        <p>Videos will appear here once added by the teacher.</p>
-      </div>
-    </div>
-
   </div>
 
-  <footer class="footer">
+  <footer class="footer" id="footer" style="display:none;">
     <div class="container">
       <div class="footer-inner">
         <div class="footer-brand">Learn Italian <span>with Iqra</span></div>
@@ -63,6 +119,114 @@
     </div>
   </footer>
 
-  <script src="js/videos.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const NAV_TOGGLE = document.getElementById('navToggle');
+    const NAV_LINKS = document.getElementById('navLinks');
+    NAV_TOGGLE.addEventListener('click', () => NAV_LINKS.classList.toggle('active'));
+    document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click', () => NAV_LINKS.classList.remove('active')));
+
+    const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+    const videos = settings.videos || [];
+    let currentFilter = 'all';
+    let currentUser = null;
+
+    function getYouTubeEmbed(url) {
+      if (!url) return null;
+      if (url.includes('mediadelivery.net') || url.includes('bunny.net') || url.includes('b-cdn.net')) return url;
+      let videoId = '';
+      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+      else if (url.includes('youtube.com/watch')) videoId = new URLSearchParams(new URL(url).search).get('v');
+      else if (url.includes('youtube.com/embed/')) videoId = url.split('youtube.com/embed/')[1].split('?')[0];
+      else { const parts = url.split('/'); videoId = parts[parts.length - 1].split('?')[0]; }
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
+    function renderVideos() {
+      const list = document.getElementById('videosList');
+      const empty = document.getElementById('videosEmpty');
+      const filtered = currentFilter === 'all' ? videos : videos.filter(v => v.level === currentFilter);
+      if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      list.innerHTML = filtered.map(v => {
+        const embedUrl = getYouTubeEmbed(v.url);
+        const levelBadge = v.level ? `<span class="course-badge badge-${v.level === 'patente' ? 'patente' : v.level.toLowerCase()}">${v.level}</span>` : '';
+        const notesHtml = v.notesUrl ? `<a href="${v.notesUrl}" target="_blank" class="video-notes-btn"><i class="fas fa-file-pdf"></i> Download Notes</a>` : '';
+        return `
+          <div class="video-list-item" data-level="${v.level || ''}">
+            <div class="video-list-player">
+              ${embedUrl ? `<iframe src="${embedUrl}" title="${v.title}" frameborder="0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;" allowfullscreen loading="lazy"></iframe>` : `<div class="video-placeholder"><i class="fas fa-play-circle"></i></div>`}
+            </div>
+            <div class="video-list-info">
+              <div class="video-list-meta">
+                ${levelBadge}
+                ${v.label ? `<span class="video-label-tag"><i class="fas fa-tag"></i> ${v.label}</span>` : ''}
+              </div>
+              <h3>${v.title}</h3>
+              ${v.description ? `<p class="video-list-desc">${v.description}</p>` : ''}
+              <div class="video-list-actions">${notesHtml}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderVideos();
+      });
+    });
+
+    function showSection(section) {
+      ['loadingState', 'notLoggedIn', 'notActive', 'videosContent'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+      document.getElementById(section).style.display = 'block';
+      if (section === 'videosContent') {
+        document.getElementById('footer').style.display = 'block';
+      }
+    }
+
+    async function handleLogout() {
+      await signOut();
+      currentUser = null;
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('logoutBtnTop').addEventListener('click', handleLogout);
+
+    initFirebase().then(() => {
+      onAuthStateChanged(async (user) => {
+        if (!user) {
+          showSection('notLoggedIn');
+          return;
+        }
+        currentUser = user;
+        const profile = await getStudentProfile(user.uid);
+
+        if (profile && profile.role === 'teacher') {
+          document.getElementById('navQuizLink').style.display = 'block';
+          document.getElementById('navManageLink').style.display = 'block';
+          document.getElementById('studentNameDisplay').textContent = 'Teacher';
+          showSection('videosContent');
+          renderVideos();
+          return;
+        }
+
+        if (!profile || !profile.isActive) {
+          showSection('notActive');
+          return;
+        }
+
+        document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
+        showSection('videosContent');
+        renderVideos();
+      });
+    });
+  </script>
 </body>
 </html>

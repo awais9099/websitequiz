@@ -19,16 +19,36 @@
     </button>
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html">Home</a></li>
+      <li><a href="videos.html">Videos</a></li>
       <li><a href="quiz.html">Quiz Tool</a></li>
       <li><a href="manage.html">Manage</a></li>
     </ul>
   </nav>
 
+  <!-- LOGIN CHECK -->
+  <div class="auth-page" id="manageLoading" style="margin-top:104px;">
+    <div class="auth-container">
+      <div class="auth-card" style="text-align:center;">
+        <i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);margin-bottom:1rem;"></i>
+        <p>Checking access...</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="manageContent" style="display:none;">
   <div class="manage-header">
     <div class="container">
-      <h1><i class="fas fa-cog"></i> Management Panel</h1>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h1><i class="fas fa-cog"></i> Management Panel</h1>
+        <button class="btn btn-sm" id="manageLogoutBtn" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
       <div class="manage-tabs">
-        <button class="manage-tab active" data-tab="questions">
+        <button class="manage-tab active" data-tab="students">
+          <i class="fas fa-users"></i> Students
+        </button>
+        <button class="manage-tab" data-tab="questions">
           <i class="fas fa-question-circle"></i> Questions
         </button>
         <button class="manage-tab" data-tab="history">
@@ -42,6 +62,31 @@
   </div>
 
   <div class="manage-content">
+
+    <!-- STUDENTS TAB -->
+    <div class="tab-panel active" id="tab-students">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h2 style="font-size:1.25rem;">Student Accounts</h2>
+        <button class="btn btn-primary btn-sm" id="addStudentBtn">
+          <i class="fas fa-user-plus"></i> Add Student
+        </button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.5rem;">Create and manage student accounts. Only active students can access video lessons.</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsBody"></tbody>
+      </table>
+      <p id="noStudents" style="text-align:center;color:var(--text-light);padding:2rem;display:none;">No students registered yet.</p>
+    </div>
 
     <!-- QUESTIONS TAB -->
     <div class="tab-panel active" id="tab-questions">
@@ -151,6 +196,53 @@
       </div>
     </div>
 
+  <!-- ADD/EDIT STUDENT MODAL -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal">
+      <h2 id="studentModalTitle">Add Student</h2>
+      <div class="form-group">
+        <label for="sName">Full Name</label>
+        <input type="text" id="sName" placeholder="Student's full name">
+      </div>
+      <div class="form-group">
+        <label for="sEmail">Email (used for login)</label>
+        <input type="email" id="sEmail" placeholder="student@email.com">
+      </div>
+      <div class="form-group">
+        <label for="sPassword">Password</label>
+        <input type="password" id="sPassword" placeholder="Minimum 6 characters" minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="sPhone">Phone</label>
+        <input type="tel" id="sPhone" placeholder="Phone number">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sLevel">Course Level</label>
+          <select id="sLevel">
+            <option value="">Not assigned</option>
+            <option value="A2">Italian A2</option>
+            <option value="B1">Italian B1</option>
+            <option value="patente">Patente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sActive">Status</label>
+          <select id="sActive">
+            <option value="false">Inactive (not paid)</option>
+            <option value="true">Active (paid)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="cancelStudentModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveStudent">
+          <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ADD/EDIT QUESTION MODAL -->
   <div class="modal-overlay" id="questionModal">
     <div class="modal">
@@ -239,6 +331,8 @@
     </div>
   </div>
 
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/questions.json.js"></script>
   <script src="js/manage.js"></script>
 </body>
