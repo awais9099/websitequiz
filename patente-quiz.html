@@ -1,61 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Patente Quiz - Learn Italian with Iqra</title>
+  <title>Scheda Esame - Patente Quiz</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta name="theme-color" content="#1a5276">
   <style>
-    .pq-container { max-width: 700px; margin: 0 auto; padding: 1rem; }
-    .pq-header { text-align: center; padding: 2rem 0 1rem; }
-    .pq-header h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 0.25rem; }
-    .pq-header p { color: var(--text-light); font-size: 0.9rem; }
-    .pq-progress { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
-    .pq-progress .q-dot { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; background: white; }
-    .pq-progress .q-dot.current { border-color: var(--primary); background: var(--primary); color: white; }
-    .pq-progress .q-dot.answered { border-color: var(--accent); background: var(--accent); color: white; }
-    .pq-progress .q-dot.wrong { border-color: var(--danger); background: var(--danger); color: white; }
-    .pq-question-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; margin-bottom: 1.5rem; border: 1px solid var(--border); }
-    .pq-question-num { font-size: 0.8rem; font-weight: 700; color: var(--primary-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; }
-    .pq-question-text { font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 1.5rem; color: var(--text); }
-    .pq-options { display: flex; gap: 1rem; }
-    .pq-option { flex: 1; padding: 1.25rem; border: 3px solid var(--border); border-radius: var(--radius); text-align: center; cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: all 0.2s; background: white; }
-    .pq-option:hover { border-color: var(--primary-light); background: #f0f7ff; }
-    .pq-option.selected-vero { border-color: var(--accent); background: #eafaf1; color: var(--accent); }
-    .pq-option.selected-falso { border-color: var(--danger); background: #fdedec; color: var(--danger); }
-    .pq-option.correct { border-color: var(--accent); background: #eafaf1; color: var(--accent); }
-    .pq-option.wrong { border-color: var(--danger); background: #fdedec; color: var(--danger); }
-    .pq-option.disabled { pointer-events: none; opacity: 0.7; }
-    .pq-nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    .pq-nav .btn { min-height: 44px; }
-    .pq-info { font-size: 0.85rem; color: var(--text-light); text-align: center; }
-    .pq-results { text-align: center; padding: 2rem 0; }
-    .pq-score-circle { width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid; }
-    .pq-score-circle.excellent { border-color: var(--accent); background: #eafaf1; }
-    .pq-score-circle.good { border-color: var(--primary-light); background: #ebf5fb; }
-    .pq-score-circle.average { border-color: var(--warning); background: #fef9e7; }
-    .pq-score-circle.poor { border-color: var(--danger); background: #fdedec; }
-    .pq-score-circle .score-num { font-size: 2.5rem; font-weight: 900; line-height: 1; }
-    .pq-score-circle .score-label { font-size: 0.85rem; font-weight: 500; }
-    .pq-review { text-align: left; margin-top: 1.5rem; }
-    .pq-review-item { padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; font-size: 0.9rem; border-left: 4px solid; }
-    .pq-review-item.correct { background: #eafaf1; border-color: var(--accent); }
-    .pq-review-item.wrong { background: #fdedec; border-color: var(--danger); }
-    .pq-quiz-list { display: grid; gap: 1rem; }
-    .pq-quiz-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; cursor: pointer; transition: all 0.2s; }
-    .pq-quiz-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
-    .pq-quiz-card h3 { font-size: 1rem; margin-bottom: 0.25rem; color: var(--primary); }
-    .pq-quiz-card p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
+    body { background: #e8ece4; }
+    .exam-wrapper { max-width: 850px; margin: 0 auto; padding: 0.5rem; font-family: Arial, Helvetica, sans-serif; }
+    .exam-header { background: linear-gradient(135deg, #2d5016, #4a7c23); color: white; padding: 0.6rem 1rem; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .exam-header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .exam-header-left img { height: 40px; }
+    .exam-header-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .exam-header-subtitle { font-size: 0.7rem; opacity: 0.8; }
+    .exam-badge { background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .exam-tabs { display: flex; background: #c5d6b0; }
+    .exam-tab { flex: 1; padding: 0.6rem; text-align: center; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #2d5016; transition: all 0.2s; border-bottom: 3px solid transparent; }
+    .exam-tab.active { background: white; border-bottom-color: #2d5016; color: #2d5016; }
+    .exam-tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+    .exam-grid { display: flex; flex-wrap: wrap; gap: 3px; padding: 0.5rem; background: #d4e4c4; justify-content: center; }
+    .exam-dot { width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 2px solid #8aab70; background: white; color: #2d5016; transition: all 0.15s; }
+    .exam-dot.current { background: #2d5016; color: white; border-color: #2d5016; }
+    .exam-dot.answered { background: #4a7c23; color: white; border-color: #4a7c23; }
+    .exam-dot.wrong { background: #c0392b; color: white; border-color: #c0392b; }
+    .exam-dot.correct { background: #27ae60; color: white; border-color: #27ae60; }
+    .exam-body { display: flex; background: white; min-height: 300px; border: 1px solid #b5c9a0; }
+    .exam-image-area { width: 200px; background: #f5f7f2; border-right: 1px solid #b5c9a0; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; }
+    .exam-question-area { flex: 1; padding: 1.5rem; position: relative; }
+    .exam-question-number { position: absolute; top: 0.75rem; right: 1rem; font-size: 2rem; font-weight: 900; color: #b5c9a0; }
+    .exam-question-text { font-size: 1rem; line-height: 1.7; color: #333; padding-right: 2rem; }
+    .exam-answers { display: flex; justify-content: center; gap: 2rem; padding: 1.5rem; background: white; border: 1px solid #b5c9a0; border-top: none; }
+    .exam-vf-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #1a3a6e; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+    .exam-vf-btn .vf-label { font-size: 0.65rem; font-weight: 600; color: #333; margin-bottom: 2px; }
+    .exam-vf-btn .vf-letter { font-size: 2rem; font-weight: 900; color: #1a3a6e; font-family: serif; }
+    .exam-vf-btn:hover { border-color: #2980b9; background: #f0f7ff; }
+    .exam-vf-btn.selected { border-color: #1a3a6e; background: #1a3a6e; }
+    .exam-vf-btn.selected .vf-label { color: white; }
+    .exam-vf-btn.selected .vf-letter { color: white; }
+    .exam-footer { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #d4e4c4; border-radius: 0 0 8px 8px; }
+    .exam-timer { font-size: 1.1rem; font-weight: 700; color: #2d5016; display: flex; align-items: center; gap: 0.5rem; }
+    .exam-timer.warning { color: #e74c3c; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .exam-nav { display: flex; gap: 0.5rem; align-items: center; }
+    .exam-nav-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #8aab70; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #2d5016; font-size: 1rem; transition: all 0.2s; }
+    .exam-nav-btn:hover { background: #2d5016; color: white; border-color: #2d5016; }
+    .exam-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .exam-correggi { padding: 0.6rem 2rem; background: white; border: 2px solid #8aab70; border-radius: 6px; font-size: 0.9rem; font-weight: 700; color: #2d5016; cursor: pointer; transition: all 0.2s; }
+    .exam-correggi:hover { background: #2d5016; color: white; }
+    .exam-correggi:disabled { opacity: 0.5; cursor: not-allowed; }
+    .exam-results-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 1rem; }
+    .exam-results-overlay.active { display: flex; }
+    .exam-results-card { background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 100%; text-align: center; max-height: 90vh; overflow-y: auto; }
+    .exam-results-score { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid; }
+    .exam-results-score.pass { border-color: #27ae60; background: #eafaf1; }
+    .exam-results-score.fail { border-color: #e74c3c; background: #fdedec; }
+    .exam-results-score .score-num { font-size: 2.2rem; font-weight: 900; }
+    .exam-results-score .score-label { font-size: 0.8rem; }
+    .exam-select-wrapper { text-align: center; padding: 3rem 1rem; }
+    .exam-select-wrapper h1 { color: #2d5016; margin-bottom: 0.5rem; }
+    .exam-select-wrapper p { color: #666; margin-bottom: 2rem; }
+    .quiz-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; max-width: 800px; margin: 0 auto; }
+    .quiz-select-card { background: white; border: 2px solid #b5c9a0; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .quiz-select-card:hover { border-color: #2d5016; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .quiz-select-card h3 { color: #2d5016; margin-bottom: 0.25rem; font-size: 1rem; }
+    .quiz-select-card p { color: #666; font-size: 0.85rem; margin: 0; }
+    .review-list { text-align: left; margin-top: 1.5rem; }
+    .review-item { padding: 0.6rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; border-left: 4px solid; }
+    .review-item.correct { background: #eafaf1; border-color: #27ae60; }
+    .review-item.wrong { background: #fdedec; border-color: #e74c3c; }
     @media (max-width: 768px) {
-      .pq-container { padding: 0.75rem; }
-      .pq-question-card { padding: 1.25rem; }
-      .pq-options { flex-direction: column; gap: 0.75rem; }
-      .pq-option { padding: 1rem; }
-      .pq-progress .q-dot { width: 28px; height: 28px; font-size: 0.7rem; }
+      .exam-body { flex-direction: column; }
+      .exam-image-area { width: 100%; height: 100px; border-right: none; border-bottom: 1px solid #b5c9a0; }
+      .exam-vf-btn { width: 70px; height: 70px; }
+      .exam-vf-btn .vf-letter { font-size: 1.7rem; }
+      .exam-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+      .exam-tab { font-size: 0.75rem; padding: 0.5rem 0.25rem; }
+    }
+    @media (max-width: 480px) {
+      .exam-header { flex-direction: column; gap: 0.5rem; text-align: center; }
+      .exam-question-text { font-size: 0.9rem; }
+      .exam-footer { flex-direction: column; gap: 0.75rem; }
+      .exam-nav { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -72,66 +101,104 @@
     </ul>
   </nav>
 
-  <div class="pq-container" style="margin-top:80px;">
+  <div class="exam-wrapper" style="margin-top:80px;">
 
     <!-- STEP 1: SELECT QUIZ -->
-    <div id="pq-step-select">
-      <div class="pq-header">
-        <h1><i class="fas fa-clipboard-check"></i> Patente Quiz</h1>
-        <p>Practice for your Italian driving license exam</p>
-      </div>
-      <div id="pqQuizList" class="pq-quiz-list"></div>
-      <div id="pqNoQuizzes" style="display:none;text-align:center;color:var(--text-light);padding:3rem;">
-        <i class="fas fa-clipboard" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
-        <p>No quizzes available yet. The teacher will add them soon.</p>
+    <div id="exam-step-select">
+      <div class="exam-select-wrapper">
+        <h1><i class="fas fa-car"></i> Scheda Esame Patente</h1>
+        <p>Select a quiz block to begin. Each quiz has 30 questions with a 20-minute timer.</p>
+        <div class="quiz-cards-grid" id="examQuizList"></div>
+        <div id="examNoQuizzes" style="display:none;color:#666;padding:3rem;">
+          <i class="fas fa-clipboard" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+          <p>No quizzes available yet. The teacher will add them soon.</p>
+        </div>
       </div>
     </div>
 
-    <!-- STEP 2: QUIZ IN PROGRESS -->
-    <div id="pq-step-quiz" style="display:none;">
-      <div class="pq-header" style="padding-bottom:0;">
-        <h1 id="pqQuizTitle">Quiz Title</h1>
-        <p id="pqQuizInfo" class="pq-info"></p>
+    <!-- STEP 2: QUIZ -->
+    <div id="exam-step-quiz" style="display:none;">
+      <div class="exam-header">
+        <div class="exam-header-left">
+          <div>
+            <div class="exam-header-title">Scheda Esame</div>
+            <div class="exam-header-subtitle">Ministero delle Infrastrutture e dei Trasporti</div>
+          </div>
+        </div>
+        <div class="exam-badge" id="examBadge">FAC-SIMILE</div>
       </div>
-      <div class="pq-progress" id="pqProgress"></div>
-      <div class="pq-question-card">
-        <div class="pq-question-num" id="pqQuestionNum">Question 1 of 10</div>
-        <div class="pq-question-text" id="pqQuestionText"></div>
-        <div class="pq-options">
-          <div class="pq-option" id="pqOptVero" onclick="selectAnswer(true)"><i class="fas fa-check"></i> VERO</div>
-          <div class="pq-option" id="pqOptFalso" onclick="selectAnswer(false)"><i class="fas fa-times"></i> FALSO</div>
+
+      <div class="exam-tabs" id="examTabs">
+        <button class="exam-tab active" onclick="switchTab(0)">Domande 1-10</button>
+        <button class="exam-tab" onclick="switchTab(1)">Domande 11-20</button>
+        <button class="exam-tab" onclick="switchTab(2)">Domande 21-30</button>
+      </div>
+
+      <div class="exam-grid" id="examGrid"></div>
+
+      <div class="exam-body">
+        <div class="exam-image-area">
+          <div id="examImagePlaceholder"><i class="fas fa-image" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i></div>
+        </div>
+        <div class="exam-question-area">
+          <div class="exam-question-number" id="examQNum">1</div>
+          <div class="exam-question-text" id="examQText"></div>
         </div>
       </div>
-      <div class="pq-nav">
-        <button class="btn btn-outline btn-sm" id="pqPrevBtn" onclick="pqPrev()"><i class="fas fa-chevron-left"></i> Back</button>
-        <span class="pq-info" id="pqPageInfo">1 / 10</span>
-        <button class="btn btn-primary btn-sm" id="pqNextBtn" onclick="pqNext()">Next <i class="fas fa-chevron-right"></i></button>
-      </div>
-      <div style="text-align:center;margin-top:1rem;">
-        <button class="btn btn-primary" id="pqSubmitBtn" onclick="submitQuiz()" style="display:none;">
-          <i class="fas fa-paper-plane"></i> Submit Quiz
+
+      <div class="exam-answers">
+        <button class="exam-vf-btn" id="examBtnVero" onclick="selectAnswer(true)">
+          <span class="vf-label">Vero</span>
+          <span class="vf-letter">V</span>
+        </button>
+        <button class="exam-vf-btn" id="examBtnFalso" onclick="selectAnswer(false)">
+          <span class="vf-label">Falso</span>
+          <span class="vf-letter">F</span>
         </button>
       </div>
-    </div>
 
-    <!-- STEP 3: RESULTS -->
-    <div id="pq-step-results" style="display:none;">
-      <div class="pq-results">
-        <div class="pq-score-circle" id="pqScoreCircle">
-          <span class="score-num" id="pqScoreNum">0</span>
-          <span class="score-label" id="pqScoreLabel">out of 0</span>
+      <div class="exam-footer">
+        <div class="exam-timer" id="examTimer">
+          <i class="fas fa-clock"></i> <span id="examTimerText">20:00</span>
         </div>
-        <h2 id="pqResultTitle">Quiz Complete!</h2>
-        <p id="pqResultMsg" style="color:var(--text-light);margin-bottom:0.5rem;"></p>
-        <p id="pqResultPercent" style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;"></p>
-        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="startQuiz(currentQuizId)"><i class="fas fa-redo"></i> Try Again</button>
-          <button class="btn btn-outline" onclick="showStep('select')" style="color:var(--primary);border-color:var(--border);"><i class="fas fa-list"></i> All Quizzes</button>
+        <div style="text-align:center;">
+          <button class="exam-correggi" id="examCorreggiBtn" onclick="correggi()" disabled>
+            <i class="fas fa-check-circle"></i> Correggi
+          </button>
+        </div>
+        <div class="exam-nav">
+          <button class="exam-nav-btn" id="examListBtn" onclick="toggleFullGrid()" title="Question List">
+            <i class="fas fa-list"></i>
+          </button>
+          <button class="exam-nav-btn" id="examPrevBtn" onclick="examPrev()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="exam-nav-btn" id="examNextBtn" onclick="examNext()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
-      <div class="pq-review" id="pqReview"></div>
-    </div>
 
+      <div class="exam-grid" id="examFullGrid" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS OVERLAY -->
+  <div class="exam-results-overlay" id="examResultsOverlay">
+    <div class="exam-results-card">
+      <h2 id="examResultTitle">Risultati</h2>
+      <div class="exam-results-score" id="examResultScore">
+        <span class="score-num" id="examResultNum">0</span>
+        <span class="score-label" id="examResultLabel">/ 30</span>
+      </div>
+      <p id="examResultMsg" style="margin-bottom:0.5rem;"></p>
+      <p id="examResultPercent" style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;"></p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+        <button class="btn btn-primary" onclick="retryQuiz()"><i class="fas fa-redo"></i> Riprova</button>
+        <button class="btn btn-outline" onclick="closeResults(); showStep('select');" style="color:var(--primary);border-color:var(--border);"><i class="fas fa-list"></i> Schede</button>
+      </div>
+      <div class="review-list" id="examReviewList"></div>
+    </div>
   </div>
 
   <script src="js/docx-parser.js"></script>

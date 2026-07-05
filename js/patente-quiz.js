@@ -3,26 +3,32 @@ const NAV_LINKS = document.getElementById('navLinks');
 NAV_TOGGLE.addEventListener('click', () => NAV_LINKS.classList.toggle('active'));
 document.querySelectorAll('.nav-links a').forEach(l => l.addEventListener('click', () => NAV_LINKS.classList.remove('active')));
 
+const QUESTIONS_PER_QUIZ = 30;
+const TIMER_MINUTES = 20;
+const TAB_SIZE = 10;
+
 let allQuizzes = [];
 let currentQuizId = null;
 let currentQuestions = [];
 let currentIndex = 0;
 let userAnswers = {};
+let timerInterval = null;
+let timeLeft = TIMER_MINUTES * 60;
+let quizSubmitted = false;
 
 function showStep(step) {
-  ['pq-step-select', 'pq-step-quiz', 'pq-step-results'].forEach(id => {
+  ['exam-step-select', 'exam-step-quiz'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
-  if (step === 'select') document.getElementById('pq-step-select').style.display = 'block';
-  if (step === 'quiz') document.getElementById('pq-step-quiz').style.display = 'block';
-  if (step === 'results') document.getElementById('pq-step-results').style.display = 'block';
+  if (step === 'select') document.getElementById('exam-step-select').style.display = 'block';
+  if (step === 'quiz') document.getElementById('exam-step-quiz').style.display = 'block';
   window.scrollTo(0, 0);
 }
 
 function loadQuizList() {
   allQuizzes = getPatenteQuizzes();
-  const container = document.getElementById('pqQuizList');
-  const noQuizzes = document.getElementById('pqNoQuizzes');
+  const container = document.getElementById('examQuizList');
+  const noQuizzes = document.getElementById('examNoQuizzes');
   if (allQuizzes.length === 0) {
     container.innerHTML = '';
     noQuizzes.style.display = 'block';
@@ -30,7 +36,7 @@ function loadQuizList() {
   }
   noQuizzes.style.display = 'none';
   container.innerHTML = allQuizzes.map(q => `
-    <div class="pq-quiz-card" onclick="startQuiz('${q.id}')">
+    <div class="quiz-select-card" onclick="startQuiz('${q.id}')">
       <h3><i class="fas fa-car"></i> ${q.title}</h3>
       <p>Blocco: ${q.blockNumber} | ${q.totalQuestions} questions</p>
     </div>
@@ -50,62 +56,94 @@ function startQuiz(quizId) {
   const quiz = allQuizzes.find(q => q.id === quizId);
   if (!quiz) return;
   currentQuizId = quizId;
-  currentQuestions = shuffleArray(quiz.questions).map((q, i) => ({ ...q, index: i }));
+
+  let questions = [...quiz.questions];
+  if (questions.length > QUESTIONS_PER_QUIZ) {
+    questions = shuffleArray(questions).slice(0, QUESTIONS_PER_QUIZ);
+  } else {
+    questions = shuffleArray(questions);
+    while (questions.length < QUESTIONS_PER_QUIZ) {
+      questions.push(questions[questions.length - 1]);
+    }
+  }
+
+  currentQuestions = questions.map((q, i) => ({ ...q, index: i }));
   currentIndex = 0;
   userAnswers = {};
-  document.getElementById('pqQuizTitle').textContent = quiz.title;
-  document.getElementById('pqQuizInfo').textContent = `Blocco: ${quiz.blockNumber} | ${currentQuestions.length} questions`;
-  renderProgress();
+  quizSubmitted = false;
+
+  document.getElementById('examBadge').textContent = quiz.title;
+  renderGrid();
   renderQuestion();
+  startTimer();
   showStep('quiz');
 }
 
-function renderProgress() {
-  const container = document.getElementById('pqProgress');
-  container.innerHTML = currentQuestions.map((q, i) => {
-    let cls = '';
-    if (i === currentIndex) cls = 'current';
-    else if (userAnswers[q.index] !== undefined) cls = userAnswers[q.index] === q.answer ? 'answered' : 'wrong';
-    return `<div class="q-dot ${cls}" onclick="goToQuestion(${i})">${i + 1}</div>`;
-  }).join('');
+function renderGrid() {
+  const grids = [document.getElementById('examGrid'), document.getElementById('examFullGrid')];
+  grids.forEach(grid => {
+    if (!grid) return;
+    grid.innerHTML = currentQuestions.map((q, i) => {
+      let cls = '';
+      if (i === currentIndex) cls = 'current';
+      else if (userAnswers[q.index] !== undefined) {
+        if (quizSubmitted) {
+          cls = userAnswers[q.index] === q.answer ? 'correct' : 'wrong';
+        } else {
+          cls = 'answered';
+        }
+      }
+      return `<div class="exam-dot ${cls}" onclick="goToQuestion(${i})">${i + 1}</div>`;
+    }).join('');
+  });
+}
+
+function getTabIndex(idx) {
+  return Math.floor(idx / TAB_SIZE);
+}
+
+function switchTab(tabIdx) {
+  const tabs = document.querySelectorAll('.exam-tab');
+  tabs.forEach((t, i) => {
+    t.classList.toggle('active', i === tabIdx);
+  });
+  const startIdx = tabIdx * TAB_SIZE;
+  if (currentIndex < startIdx || currentIndex >= startIdx + TAB_SIZE) {
+    currentIndex = startIdx;
+  }
+  renderQuestion();
 }
 
 function renderQuestion() {
   const q = currentQuestions[currentIndex];
-  const total = currentQuestions.length;
-  document.getElementById('pqQuestionNum').textContent = `Question ${currentIndex + 1} of ${total}`;
-  document.getElementById('pqQuestionText').textContent = q.text;
-  document.getElementById('pqPageInfo').textContent = `${currentIndex + 1} / ${total}`;
+  document.getElementById('examQNum').textContent = currentIndex + 1;
+  document.getElementById('examQText').textContent = q.text;
 
-  const vero = document.getElementById('pqOptVero');
-  const falso = document.getElementById('pqOptFalso');
-  vero.className = 'pq-option';
-  falso.className = 'pq-option';
+  const tabIdx = getTabIndex(currentIndex);
+  const tabs = document.querySelectorAll('.exam-tab');
+  tabs.forEach((t, i) => t.classList.toggle('active', i === tabIdx));
+
+  const vero = document.getElementById('examBtnVero');
+  const falso = document.getElementById('examBtnFalso');
+  vero.classList.remove('selected');
+  falso.classList.remove('selected');
 
   if (userAnswers[q.index] !== undefined) {
-    if (userAnswers[q.index] === true) vero.classList.add('selected-vero');
-    else falso.classList.add('selected-falso');
+    if (userAnswers[q.index] === true) vero.classList.add('selected');
+    else falso.classList.add('selected');
   }
 
-  document.getElementById('pqPrevBtn').disabled = currentIndex === 0;
-  document.getElementById('pqPrevBtn').style.opacity = currentIndex === 0 ? '0.5' : '1';
+  document.getElementById('examPrevBtn').disabled = currentIndex === 0;
+  document.getElementById('examNextBtn').disabled = currentIndex === QUESTIONS_PER_QUIZ - 1;
 
   const answeredCount = Object.keys(userAnswers).length;
-  const submitBtn = document.getElementById('pqSubmitBtn');
-  if (answeredCount === total) {
-    submitBtn.style.display = 'inline-flex';
-    document.getElementById('pqNextBtn').style.display = 'none';
-  } else {
-    submitBtn.style.display = 'none';
-    document.getElementById('pqNextBtn').style.display = 'inline-flex';
-    document.getElementById('pqNextBtn').disabled = currentIndex === total - 1;
-    document.getElementById('pqNextBtn').style.opacity = currentIndex === total - 1 ? '0.5' : '1';
-  }
+  document.getElementById('examCorreggiBtn').disabled = answeredCount < QUESTIONS_PER_QUIZ;
 
-  renderProgress();
+  renderGrid();
 }
 
 function selectAnswer(answer) {
+  if (quizSubmitted) return;
   const q = currentQuestions[currentIndex];
   userAnswers[q.index] = answer;
   renderQuestion();
@@ -116,65 +154,96 @@ function goToQuestion(idx) {
   renderQuestion();
 }
 
-function pqPrev() {
+function examPrev() {
   if (currentIndex > 0) { currentIndex--; renderQuestion(); }
 }
 
-function pqNext() {
-  if (currentIndex < currentQuestions.length - 1) { currentIndex++; renderQuestion(); }
+function examNext() {
+  if (currentIndex < QUESTIONS_PER_QUIZ - 1) { currentIndex++; renderQuestion(); }
 }
 
-function submitQuiz() {
+function toggleFullGrid() {
+  const grid = document.getElementById('examFullGrid');
+  grid.style.display = grid.style.display === 'none' ? 'flex' : 'none';
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIMER_MINUTES * 60;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      correggi();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+  const text = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  document.getElementById('examTimerText').textContent = text;
+  const timerEl = document.getElementById('examTimer');
+  if (timeLeft <= 120) {
+    timerEl.classList.add('warning');
+  } else {
+    timerEl.classList.remove('warning');
+  }
+}
+
+function correggi() {
+  if (quizSubmitted) return;
+  quizSubmitted = true;
+  clearInterval(timerInterval);
+
   let score = 0;
-  const review = currentQuestions.map(q => {
+  const review = currentQuestions.map((q, i) => {
     const userAns = userAnswers[q.index];
     const isCorrect = userAns === q.answer;
     if (isCorrect) score++;
-    return { text: q.text, correct: q.answer, userAnswer: userAns, isCorrect };
+    return { text: q.text, correct: q.answer, userAnswer: userAns, isCorrect, num: i + 1 };
   });
 
-  const total = currentQuestions.length;
+  const total = QUESTIONS_PER_QUIZ;
+  const wrong = total - score;
+  const passed = wrong <= 3;
   const percent = Math.round(score / total * 100);
 
-  document.getElementById('pqScoreNum').textContent = score;
-  document.getElementById('pqScoreLabel').textContent = `out of ${total}`;
-  document.getElementById('pqResultPercent').textContent = `${percent}%`;
+  document.getElementById('examResultNum').textContent = score;
+  document.getElementById('examResultLabel').textContent = `/ ${total}`;
 
-  const circle = document.getElementById('pqScoreCircle');
-  circle.className = 'pq-score-circle';
-  if (percent >= 90) {
-    circle.classList.add('excellent');
-    document.getElementById('pqResultTitle').textContent = 'Ottimo!';
-    document.getElementById('pqResultMsg').textContent = 'Excellent! You passed with flying colors!';
-  } else if (percent >= 70) {
-    circle.classList.add('good');
-    document.getElementById('pqResultTitle').textContent = 'Ben fatto!';
-    document.getElementById('pqResultMsg').textContent = 'Good job! Keep practicing to improve.';
-  } else if (percent >= 50) {
-    circle.classList.add('average');
-    document.getElementById('pqResultTitle').textContent = 'Non male';
-    document.getElementById('pqResultMsg').textContent = 'Not bad, but you need more practice.';
-  } else {
-    circle.classList.add('poor');
-    document.getElementById('pqResultTitle').textContent = 'Da riprovare';
-    document.getElementById('pqResultMsg').textContent = 'Keep studying and try again!';
-  }
+  const scoreEl = document.getElementById('examResultScore');
+  scoreEl.className = 'exam-results-score ' + (passed ? 'pass' : 'fail');
 
-  const reviewContainer = document.getElementById('pqReview');
-  reviewContainer.innerHTML = `
-    <h3 style="margin-bottom:1rem;"><i class="fas fa-list-check"></i> Review Answers</h3>
-    ${review.map((r, i) => `
-      <div class="pq-review-item ${r.isCorrect ? 'correct' : 'wrong'}">
-        <strong>${i + 1}. ${r.text}</strong><br>
-        <span style="font-size:0.85rem;">
-          Your answer: <strong>${r.userAnswer === true ? 'VERO' : 'FALSO'}</strong>
-          ${r.isCorrect ? '<i class="fas fa-check" style="color:var(--accent);"></i>' : ` — Correct: <strong>${r.correct ? 'VERO' : 'FALSO'}</strong> <i class="fas fa-times" style="color:var(--danger);"></i>`}
-        </span>
-      </div>
-    `).join('')}
-  `;
+  document.getElementById('examResultTitle').textContent = passed ? 'Esame Superato!' : 'Non Superato';
+  document.getElementById('examResultMsg').textContent = passed
+    ? `Hai sbagliato solo ${wrong} ${wrong === 1 ? 'domanda' : 'domande'}. Complimenti!`
+    : `Hai sbagliato ${wrong} domande. Max 3 errori consentiti.`;
+  document.getElementById('examResultPercent').textContent = `${percent}%`;
 
-  showStep('results');
+  document.getElementById('examReviewList').innerHTML = review.map(r => `
+    <div class="review-item ${r.isCorrect ? 'correct' : 'wrong'}">
+      <strong>${r.num}. ${r.text}</strong><br>
+      <span style="font-size:0.85rem;">
+        Risposta: <strong>${r.userAnswer === true ? 'Vero' : r.userAnswer === false ? 'Falso' : 'Non risposta'}</strong>
+        ${r.isCorrect ? ' <i class="fas fa-check" style="color:#27ae60;"></i>' : ` — Corretta: <strong>${r.correct ? 'Vero' : 'Falso'}</strong> <i class="fas fa-times" style="color:#e74c3c;"></i>`}
+      </span>
+    </div>
+  `).join('');
+
+  document.getElementById('examResultsOverlay').classList.add('active');
+}
+
+function closeResults() {
+  document.getElementById('examResultsOverlay').classList.remove('active');
+}
+
+function retryQuiz() {
+  closeResults();
+  startQuiz(currentQuizId);
 }
 
 document.addEventListener('DOMContentLoaded', loadQuizList);
