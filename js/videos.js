@@ -32,8 +32,7 @@ function getYouTubeEmbed(url) {
 
 function getEmbedUrl(url) {
   if (!url) return null;
-  if (url.includes('bunny.net') || url.includes('b-cdn.net')) {
-    if (url.includes('bunny.net/play/')) return url;
+  if (url.includes('mediadelivery.net') || url.includes('bunny.net') || url.includes('b-cdn.net')) {
     return url;
   }
   return getYouTubeEmbed(url);
@@ -66,7 +65,7 @@ function renderVideos() {
       <div class="video-list-item" data-level="${v.level || ''}">
         <div class="video-list-player">
           ${embedUrl
-            ? `<iframe src="${embedUrl}" title="${v.title}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>`
+            ? `<iframe src="${embedUrl}" title="${v.title}" frameborder="0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;" allowfullscreen loading="lazy"></iframe>`
             : `<div class="video-placeholder"><i class="fas fa-play-circle"></i></div>`
           }
         </div>
