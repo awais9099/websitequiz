@@ -68,6 +68,9 @@ async function loadStudents() {
           <button class="btn btn-sm" style="background:${s.isActive ? 'var(--warning)' : 'var(--accent)'};color:white;" onclick="toggleStudentActive('${s.uid}', ${!s.isActive})">
             <i class="fas fa-${s.isActive ? 'ban' : 'check'}"></i>
           </button>
+          <button class="btn btn-sm" style="background:var(--primary-light);color:white;" onclick="resetStudentPassword('${s.email}')" title="Send password reset email">
+            <i class="fas fa-key"></i>
+          </button>
           <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
@@ -152,6 +155,16 @@ async function deleteStudent(uid) {
   await deleteStudentProfile(uid);
   showToast('Student deleted');
   loadStudents();
+}
+
+async function resetStudentPassword(email) {
+  if (!confirm(`Send password reset email to ${email}?`)) return;
+  try {
+    await sendPasswordReset(email);
+    showToast('Password reset email sent to ' + email);
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
 }
 
 // ===== QUESTIONS =====
