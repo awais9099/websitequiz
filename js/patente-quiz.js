@@ -15,6 +15,7 @@ let userAnswers = {};
 let timerInterval = null;
 let timeLeft = TIMER_MINUTES * 60;
 let quizSubmitted = false;
+let totalQuestionsInQuiz = 0;
 
 function showStep(step) {
   ['exam-step-select', 'exam-step-quiz'].forEach(id => {
@@ -64,15 +65,8 @@ function startQuiz(quizId) {
   if (!quiz) return;
   currentQuizId = quizId;
 
-  let questions = [...quiz.questions];
-  if (questions.length > QUESTIONS_PER_QUIZ) {
-    questions = shuffleArray(questions).slice(0, QUESTIONS_PER_QUIZ);
-  } else {
-    questions = shuffleArray(questions);
-    while (questions.length < QUESTIONS_PER_QUIZ) {
-      questions.push(questions[questions.length - 1]);
-    }
-  }
+  let questions = shuffleArray([...quiz.questions]);
+  totalQuestionsInQuiz = questions.length;
 
   currentQuestions = questions.map((q, i) => ({ ...q, index: i }));
   currentIndex = 0;
@@ -80,6 +74,7 @@ function startQuiz(quizId) {
   quizSubmitted = false;
 
   document.getElementById('examBadge').textContent = quiz.title;
+  updateTabs();
   renderGrid();
   renderQuestion();
   startTimer();
@@ -100,8 +95,23 @@ function renderGrid() {
           cls = 'answered';
         }
       }
-      return `<div class="exam-dot ${cls}" onclick="goToQuestion(${i})">${i + 1}</div>`;
+      return '<div class="exam-dot ' + cls + '" onclick="goToQuestion(' + i + ')">' + (i + 1) + '</div>';
     }).join('');
+  });
+}
+
+function updateTabs() {
+  const tabs = document.querySelectorAll('.exam-tab');
+  const numTabs = Math.ceil(totalQuestionsInQuiz / TAB_SIZE);
+  tabs.forEach((t, i) => {
+    if (i < numTabs) {
+      t.style.display = '';
+      const start = i * TAB_SIZE + 1;
+      const end = Math.min((i + 1) * TAB_SIZE, totalQuestionsInQuiz);
+      t.textContent = 'Domande ' + start + '-' + end;
+    } else {
+      t.style.display = 'none';
+    }
   });
 }
 
@@ -141,10 +151,10 @@ function renderQuestion() {
   }
 
   document.getElementById('examPrevBtn').disabled = currentIndex === 0;
-  document.getElementById('examNextBtn').disabled = currentIndex === QUESTIONS_PER_QUIZ - 1;
+  document.getElementById('examNextBtn').disabled = currentIndex === totalQuestionsInQuiz - 1;
 
   const answeredCount = Object.keys(userAnswers).length;
-  document.getElementById('examCorreggiBtn').disabled = answeredCount < QUESTIONS_PER_QUIZ;
+  document.getElementById('examCorreggiBtn').disabled = answeredCount < totalQuestionsInQuiz;
 
   renderGrid();
 }
@@ -166,7 +176,7 @@ function examPrev() {
 }
 
 function examNext() {
-  if (currentIndex < QUESTIONS_PER_QUIZ - 1) { currentIndex++; renderQuestion(); }
+  if (currentIndex < totalQuestionsInQuiz - 1) { currentIndex++; renderQuestion(); }
 }
 
 function toggleFullGrid() {
@@ -214,32 +224,32 @@ function correggi() {
     return { text: q.text, correct: q.answer, userAnswer: userAns, isCorrect, num: i + 1 };
   });
 
-  const total = QUESTIONS_PER_QUIZ;
+  const total = totalQuestionsInQuiz;
   const wrong = total - score;
   const passed = wrong <= 3;
   const percent = Math.round(score / total * 100);
 
   document.getElementById('examResultNum').textContent = score;
-  document.getElementById('examResultLabel').textContent = `/ ${total}`;
+  document.getElementById('examResultLabel').textContent = '/ ' + total;
 
   const scoreEl = document.getElementById('examResultScore');
   scoreEl.className = 'exam-results-score ' + (passed ? 'pass' : 'fail');
 
   document.getElementById('examResultTitle').textContent = passed ? 'Esame Superato!' : 'Non Superato';
   document.getElementById('examResultMsg').textContent = passed
-    ? `Hai sbagliato solo ${wrong} ${wrong === 1 ? 'domanda' : 'domande'}. Complimenti!`
-    : `Hai sbagliato ${wrong} domande. Max 3 errori consentiti.`;
-  document.getElementById('examResultPercent').textContent = `${percent}%`;
+    ? 'Hai sbagliato solo ' + wrong + (wrong === 1 ? ' domanda' : ' domande') + '. Complimenti!'
+    : 'Hai sbagliato ' + wrong + ' domande. Max 3 errori consentiti.';
+  document.getElementById('examResultPercent').textContent = percent + '%';
 
-  document.getElementById('examReviewList').innerHTML = review.map(r => `
-    <div class="review-item ${r.isCorrect ? 'correct' : 'wrong'}">
-      <strong>${r.num}. ${r.text}</strong><br>
-      <span style="font-size:0.85rem;">
-        Risposta: <strong>${r.userAnswer === true ? 'Vero' : r.userAnswer === false ? 'Falso' : 'Non risposta'}</strong>
-        ${r.isCorrect ? ' <i class="fas fa-check" style="color:#27ae60;"></i>' : ` — Corretta: <strong>${r.correct ? 'Vero' : 'Falso'}</strong> <i class="fas fa-times" style="color:#e74c3c;"></i>`}
-      </span>
-    </div>
-  `).join('');
+  document.getElementById('examReviewList').innerHTML = review.map(r => {
+    const ansText = r.userAnswer === true ? 'Vero' : r.userAnswer === false ? 'Falso' : 'Non risposta';
+    const correctText = r.correct ? 'Vero' : 'Falso';
+    const checkIcon = r.isCorrect ? ' <i class="fas fa-check" style="color:#27ae60;"></i>' : ' — Corretta: <strong>' + correctText + '</strong> <i class="fas fa-times" style="color:#e74c3c;"></i>';
+    return '<div class="review-item ' + (r.isCorrect ? 'correct' : 'wrong') + '">' +
+      '<strong>' + r.num + '. ' + r.text + '</strong><br>' +
+      '<span style="font-size:0.85rem;">Risposta: <strong>' + ansText + '</strong>' + checkIcon + '</span>' +
+    '</div>';
+  }).join('');
 
   document.getElementById('examResultsOverlay').classList.add('active');
 }
