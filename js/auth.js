@@ -77,3 +77,13 @@ async function isAdmin(uid) {
   const profile = await getStudentProfile(uid);
   return profile && profile.role === 'teacher';
 }
+
+async function sendPasswordReset(email) {
+  return firebaseAuth.sendPasswordResetEmail(email);
+}
+
+async function changePassword(newPassword) {
+  const user = firebaseAuth.currentUser;
+  if (!user) throw new Error('No user logged in');
+  return user.updatePassword(newPassword);
+}

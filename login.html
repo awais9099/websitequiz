@@ -42,6 +42,9 @@
               <i class="fas fa-lock"></i>
               <input type="password" id="authPassword" placeholder="Enter your password" required minlength="6">
             </div>
+            <div style="text-align:right;margin-top:0.4rem;">
+              <button type="button" class="auth-toggle-btn" id="forgotPasswordBtn" style="font-size:0.8rem;">Forgot Password?</button>
+            </div>
           </div>
           <div class="form-group" id="phoneGroup" style="display:none;">
             <label for="authPhone">Phone Number</label>
@@ -83,6 +86,26 @@
     const authError = document.getElementById('authError');
     const nameGroup = document.getElementById('nameGroup');
     const phoneGroup = document.getElementById('phoneGroup');
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+
+    forgotPasswordBtn.addEventListener('click', async () => {
+      const email = document.getElementById('authEmail').value.trim();
+      if (!email) { showError('Enter your email first, then click Forgot Password.'); return; }
+      try {
+        await initFirebase();
+        await sendPasswordReset(email);
+        showError('Password reset email sent! Check your inbox.');
+        authError.style.background = '#d4edda';
+        authError.style.color = '#155724';
+        authError.style.borderColor = '#c3e6cb';
+        setTimeout(() => { authError.style.background = ''; authError.style.color = ''; authError.style.borderColor = ''; }, 5000);
+      } catch (err) {
+        let msg = 'Could not send reset email.';
+        if (err.code === 'auth/user-not-found') msg = 'No account found with this email.';
+        if (err.code === 'auth/invalid-email') msg = 'Invalid email address.';
+        showError(msg);
+      }
+    });
 
     authToggleBtn.addEventListener('click', () => {
       isRegister = !isRegister;

@@ -143,3 +143,42 @@ navLogoutBtn.addEventListener('click', async () => {
   await signOut();
   window.location.reload();
 });
+
+// Change Password Modal
+const changePwModal = document.getElementById('changePwModal');
+const navChangePwBtn = document.getElementById('navChangePwBtn');
+const closeChangePwModal = document.getElementById('closeChangePwModal');
+const cancelChangePw = document.getElementById('cancelChangePw');
+const saveChangePw = document.getElementById('saveChangePw');
+const changePwError = document.getElementById('changePwError');
+
+navChangePwBtn.addEventListener('click', () => {
+  changePwError.style.display = 'none';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  changePwModal.classList.add('active');
+});
+
+closeChangePwModal.addEventListener('click', () => changePwModal.classList.remove('active'));
+cancelChangePw.addEventListener('click', () => changePwModal.classList.remove('active'));
+changePwModal.addEventListener('click', (e) => { if (e.target === changePwModal) changePwModal.classList.remove('active'); });
+
+saveChangePw.addEventListener('click', async () => {
+  const newPw = document.getElementById('newPassword').value;
+  const confirmPw = document.getElementById('confirmPassword').value;
+  changePwError.style.display = 'none';
+
+  if (newPw.length < 6) { changePwError.textContent = 'Password must be at least 6 characters.'; changePwError.style.display = 'block'; return; }
+  if (newPw !== confirmPw) { changePwError.textContent = 'Passwords do not match.'; changePwError.style.display = 'block'; return; }
+
+  try {
+    await changePassword(newPw);
+    changePwModal.classList.remove('active');
+    alert('Password changed successfully!');
+  } catch (err) {
+    let msg = 'Could not change password.';
+    if (err.code === 'auth/requires-recent-login') msg = 'Please log out and log in again, then try changing your password.';
+    changePwError.textContent = msg;
+    changePwError.style.display = 'block';
+  }
+});
