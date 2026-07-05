@@ -111,10 +111,10 @@ function populateGroupCheckboxes() {
     const levelGroups = allGroups.filter(g => g.level === level);
     if (levelGroups.length === 0) continue;
     const badgeClass = level === 'patente' ? 'badge-patente' : `badge-${level.toLowerCase()}`;
-    html += `<div style="margin-bottom:0.75rem;">`;
-    html += `<div style="font-size:0.8rem;font-weight:600;color:var(--primary);margin-bottom:0.4rem;padding-bottom:0.3rem;border-bottom:1px solid var(--border);"><span class="course-badge ${badgeClass}" style="font-size:0.7rem;">${level}</span> ${levelLabels[level]}</div>`;
+    html += `<div style="margin-bottom:0.5rem;">`;
+    html += `<div style="font-size:0.8rem;font-weight:600;color:var(--primary);margin-bottom:0.3rem;padding-bottom:0.3rem;border-bottom:1px solid var(--border);"><span class="course-badge ${badgeClass}" style="font-size:0.7rem;">${level}</span> ${levelLabels[level]}</div>`;
     for (const g of levelGroups) {
-      html += `<label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.5rem;cursor:pointer;font-size:0.85rem;border-radius:var(--radius-sm);margin-bottom:0.15rem;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"><input type="checkbox" value="${g.id}" class="group-checkbox" style="margin:0;flex-shrink:0;"> <span>${g.name}</span></label>`;
+      html += `<label style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.4rem;cursor:pointer;font-size:0.85rem;border-radius:4px;margin-bottom:2px;min-width:0;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"><input type="checkbox" value="${g.id}" class="group-checkbox" style="margin:0;flex-shrink:0;"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${g.name}</span></label>`;
     }
     html += '</div>';
   }
