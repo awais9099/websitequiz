@@ -26,21 +26,28 @@ function showStep(step) {
 }
 
 function loadQuizList() {
-  allQuizzes = getPatenteQuizzes();
   const container = document.getElementById('examQuizList');
   const noQuizzes = document.getElementById('examNoQuizzes');
-  if (allQuizzes.length === 0) {
-    container.innerHTML = '';
-    noQuizzes.style.display = 'block';
-    return;
-  }
+  container.innerHTML = '<div style="text-align:center;padding:2rem;color:#999;"><i class="fas fa-spinner fa-spin"></i> Loading quizzes...</div>';
   noQuizzes.style.display = 'none';
-  container.innerHTML = allQuizzes.map(q => `
-    <div class="quiz-select-card" onclick="startQuiz('${q.id}')">
-      <h3><i class="fas fa-car"></i> ${q.title}</h3>
-      <p>Blocco: ${q.blockNumber} | ${q.totalQuestions} questions</p>
-    </div>
-  `).join('');
+
+  initFirebase().then(() => getAllPatenteQuizzes()).then(quizzes => {
+    allQuizzes = quizzes;
+    if (quizzes.length === 0) {
+      container.innerHTML = '';
+      noQuizzes.style.display = 'block';
+      return;
+    }
+    noQuizzes.style.display = 'none';
+    container.innerHTML = quizzes.map(q => `
+      <div class="quiz-select-card" onclick="startQuiz('${q.id}')">
+        <h3><i class="fas fa-car"></i> ${q.title}</h3>
+        <p>Blocco: ${q.blockNumber} | ${q.totalQuestions} questions</p>
+      </div>
+    `).join('');
+  }).catch(err => {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Error loading quizzes: ' + err.message + '</div>';
+  });
 }
 
 function shuffleArray(arr) {

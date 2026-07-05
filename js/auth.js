@@ -213,3 +213,23 @@ async function updateTrick(trickId, data) {
 async function deleteTrick(trickId) {
   return firebaseDb.collection('patenteTricks').doc(trickId).delete();
 }
+
+// ===== PATENTE QUIZZES =====
+async function createPatenteQuiz(data) {
+  const ref = await firebaseDb.collection('patenteQuizzes').add(data);
+  return ref.id;
+}
+
+async function getAllPatenteQuizzes() {
+  const snapshot = await firebaseDb.collection('patenteQuizzes').get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getPatenteQuiz(quizId) {
+  const doc = await firebaseDb.collection('patenteQuizzes').doc(quizId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
+async function deletePatenteQuiz(quizId) {
+  return firebaseDb.collection('patenteQuizzes').doc(quizId).delete();
+}

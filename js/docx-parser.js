@@ -45,29 +45,3 @@ function parsePatenteText(text) {
     createdAt: new Date().toISOString()
   }));
 }
-
-function getPatenteQuizzes() {
-  try {
-    return JSON.parse(localStorage.getItem('patenteQuizzes') || '[]');
-  } catch { return []; }
-}
-
-function savePatenteQuizzes(quizzes) {
-  localStorage.setItem('patenteQuizzes', JSON.stringify(quizzes));
-}
-
-function addPatenteQuizzes(newQuizzes) {
-  const existing = getPatenteQuizzes();
-  const merged = [...existing, ...newQuizzes];
-  savePatenteQuizzes(merged);
-  return merged;
-}
-
-function deletePatenteQuiz(quizId) {
-  const quizzes = getPatenteQuizzes().filter(q => q.id !== quizId);
-  savePatenteQuizzes(quizzes);
-}
-
-function clearAllPatenteQuizzes() {
-  localStorage.removeItem('patenteQuizzes');
-}

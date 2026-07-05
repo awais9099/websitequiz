@@ -763,7 +763,6 @@ function parseAndPreview() {
     showToast('No quizzes found. Check the format.', 'error');
     return;
   }
-  parsedQuizzes.forEach(q => q.id = 'pq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
   const totalQ = parsedQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
   document.getElementById('previewCount').textContent = totalQ;
   document.getElementById('previewQuizCount').textContent = parsedQuizzes.length;
@@ -776,44 +775,86 @@ function parseAndPreview() {
       </div>
       <div style="font-size:0.85rem;">
         <div style="margin-bottom:0.5rem;"><span style="color:var(--accent);font-weight:600;">VERE (${q.questions.filter(x => x.answer).length}):</span></div>
-        ${q.questions.filter(x => x.answer).map(x => `<div style="padding:0.2rem 0;color:var(--text);">• ${x.text}</div>`).join('')}
+        ${q.questions.filter(x => x.answer).map(x => '<div style="padding:0.2rem 0;color:var(--text);">• ' + x.text + '</div>').join('')}
         <div style="margin:0.5rem 0 0.5rem;"><span style="color:var(--danger);font-weight:600;">FALSE (${q.questions.filter(x => !x.answer).length}):</span></div>
-        ${q.questions.filter(x => !x.answer).map(x => `<div style="padding:0.2rem 0;color:var(--text);">• ${x.text}</div>`).join('')}
+        ${q.questions.filter(x => !x.answer).map(x => '<div style="padding:0.2rem 0;color:var(--text);">• ' + x.text + '</div>').join('')}
       </div>
     </div>
   `).join('');
   document.getElementById('importPreview').style.display = 'block';
 }
 
-function saveImportedQuizzes() {
+async function saveImportedQuizzes() {
   if (parsedQuizzes.length === 0) return;
-  addPatenteQuizzes(parsedQuizzes);
-  showToast(`Saved ${parsedQuizzes.length} quizzes (${parsedQuizzes.reduce((s, q) => s + q.questions.length, 0)} questions)`, 'success');
-  parsedQuizzes = [];
-  document.getElementById('importPreview').style.display = 'none';
-  document.getElementById('docxPasteArea').value = '';
-  loadPatenteQuizzes();
+  const btn = document.getElementById('saveImportBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  try {
+    for (const q of parsedQuizzes) {
+      await createPatenteQuiz(q);
+    }
+    const total = parsedQuizzes.reduce((s, q) => s + q.questions.length, 0);
+    showToast('Saved ' + parsedQuizzes.length + ' quizzes (' + total + ' questions)', 'success');
+    parsedQuizzes = [];
+    document.getElementById('importPreview').style.display = 'none';
+    document.getElementById('docxPasteArea').value = '';
+    loadPatenteQuizzes();
+  } catch (err) {
+    showToast('Error saving: ' + err.message, 'error');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-save"></i> Save All to Database';
 }
 
-function loadPatenteQuizzes() {
-  const quizzes = getPatenteQuizzes();
+async function loadPatenteQuizzes() {
   const container = document.getElementById('importedQuizzesList');
   const noQuizzes = document.getElementById('noImportedQuizzes');
-  document.getElementById('importedQuizCount').textContent = quizzes.length;
-  if (quizzes.length === 0) {
-    container.innerHTML = '';
-    noQuizzes.style.display = 'block';
-    return;
-  }
-  noQuizzes.style.display = 'none';
-  container.innerHTML = quizzes.map(q => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border-bottom:1px solid var(--border);">
-      <div>
-        <strong style="color:var(--primary);">${q.title}</strong>
-        <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">Blocco: ${q.blockNumber}</span>
-        <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">| ${q.totalQuestions} questions</span>
+  try {
+    const quizzes = await getAllPatenteQuizzes();
+    document.getElementById('importedQuizCount').textContent = quizzes.length;
+    if (quizzes.length === 0) {
+      container.innerHTML = '';
+      noQuizzes.style.display = 'block';
+      return;
+    }
+    noQuizzes.style.display = 'none';
+    container.innerHTML = quizzes.map(q => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border-bottom:1px solid var(--border);">
+        <div>
+          <strong style="color:var(--primary);">${q.title}</strong>
+          <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">Blocco: ${q.blockNumber}</span>
+          <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">| ${q.totalQuestions} questions</span>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deletePatenteQuizConfirm('${q.id}')"><i class="fas fa-trash"></i></button>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="deletePatenteQuiz('${q.id}'); loadPatenteQuizzes();"><i class="fas fa-trash"></i></button>
-    </div>
-  `).join('');
+    `).join('');
+  } catch (err) {
+    container.innerHTML = '<p style="color:var(--danger);text-align:center;padding:1rem;">Error loading: ' + err.message + '</p>';
+    noQuizzes.style.display = 'none';
+  }
+}
+
+async function deletePatenteQuizConfirm(quizId) {
+  if (!confirm('Delete this quiz?')) return;
+  try {
+    await deletePatenteQuiz(quizId);
+    showToast('Quiz deleted', 'success');
+    loadPatenteQuizzes();
+  } catch (err) {
+    showToast('Error deleting: ' + err.message, 'error');
+  }
+}
+
+async function clearAllPatenteQuizzesConfirm() {
+  if (!confirm('Delete ALL patente quizzes? This cannot be undone.')) return;
+  try {
+    const quizzes = await getAllPatenteQuizzes();
+    for (const q of quizzes) {
+      await deletePatenteQuiz(q.id);
+    }
+    showToast('All quizzes deleted', 'success');
+    loadPatenteQuizzes();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
 }
