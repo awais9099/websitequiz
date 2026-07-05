@@ -29,7 +29,12 @@ function showSection(section) {
   ['loadingState', 'notLoggedIn', 'notActive', 'videosContent'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
-  document.getElementById(section).style.display = 'block';
+  const el = document.getElementById(section);
+  if (el.classList.contains('auth-page')) {
+    el.style.display = 'flex';
+  } else {
+    el.style.display = 'block';
+  }
   if (section === 'videosContent') {
     document.getElementById('footer').style.display = 'block';
   }
