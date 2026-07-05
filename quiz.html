@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Tool - Learn Italian with Iqra</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">Learn Italian <span>with Iqra</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="quiz.html">Quiz Tool</a></li>
+      <li><a href="manage.html">Manage</a></li>
+    </ul>
+  </nav>
+
+  <div class="quiz-container">
+
+    <div class="quiz-header">
+      <h1><i class="fas fa-clipboard-list"></i> Quiz Tool</h1>
+      <p>Teacher-operated assessment for students</p>
+    </div>
+
+    <!-- STEP 1: Student Info -->
+    <div id="step-student" class="quiz-card">
+      <h3><i class="fas fa-user"></i> Student Information</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="studentName">Student Name</label>
+          <input type="text" id="studentName" placeholder="Enter student name">
+        </div>
+        <div class="form-group">
+          <label for="studentPhone">Phone Number</label>
+          <input type="tel" id="studentPhone" placeholder="Enter phone number">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="quizLevel">Course Level</label>
+        <select id="quizLevel">
+          <option value="A2">Italian A2</option>
+          <option value="B1">Italian B1</option>
+          <option value="patente">Patente (Driving License)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="questionCount">Number of Questions</label>
+        <select id="questionCount">
+          <option value="3">3 Questions</option>
+          <option value="4" selected>4 Questions</option>
+          <option value="5">5 Questions</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="startQuiz" style="width:100%;justify-content:center;">
+        <i class="fas fa-play"></i> Start Quiz
+      </button>
+    </div>
+
+    <!-- STEP 2: Quiz Questions -->
+    <div id="step-quiz" style="display:none;">
+      <div id="quizProgress" class="quiz-card" style="margin-bottom:1rem;text-align:center;">
+        <strong id="progressText">Question 1 of 4</strong>
+      </div>
+      <div id="questionContainer"></div>
+    </div>
+
+    <!-- STEP 3: Results -->
+    <div id="step-results" style="display:none;">
+      <div class="quiz-card">
+        <div class="score-display">
+          <div class="score-circle" id="scoreCircle">
+            <span id="scoreValue">0</span>
+            <span class="score-label" id="scoreLabel">out of 0</span>
+          </div>
+          <h2 id="resultTitle">Quiz Complete!</h2>
+          <p id="studentInfo" style="color:var(--text-light);margin:0.5rem 0;"></p>
+          <p id="resultMessage" style="color:var(--text-light);margin-bottom:2rem;"></p>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="downloadPdf">
+              <i class="fas fa-file-pdf"></i> Download PDF Report
+            </button>
+            <button class="btn btn-secondary" id="shareWhatsApp">
+              <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+            <button class="btn btn-outline" id="newQuiz" style="color:var(--primary);border-color:var(--border);">
+              <i class="fas fa-redo"></i> New Quiz
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-card" style="margin-top:1rem;">
+        <h3><i class="fas fa-list-check"></i> Detailed Results</h3>
+        <div id="detailedResults"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/questions.json.js"></script>
+  <script src="js/pdf-report.js"></script>
+  <script src="js/quiz.js"></script>
+</body>
+</html>
