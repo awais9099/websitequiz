@@ -183,6 +183,14 @@ function loadSettings() {
   document.getElementById('whatsappLink').value = settings.whatsappLink || '';
   document.getElementById('tiktokLink').value = settings.tiktokLink || '';
   document.getElementById('youtubeLink').value = settings.youtubeLink || '';
+
+  const videos = settings.videos || [];
+  const videoTitles = document.querySelectorAll('.video-title');
+  const videoUrls = document.querySelectorAll('.video-url');
+  videos.forEach((v, i) => {
+    if (videoTitles[i]) videoTitles[i].value = v.title || '';
+    if (videoUrls[i]) videoUrls[i].value = v.url || '';
+  });
 }
 
 function saveSettings() {
@@ -198,12 +206,30 @@ function saveSettings() {
   showToast('Settings saved');
 }
 
+function saveVideos() {
+  const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+  const videoTitles = document.querySelectorAll('.video-title');
+  const videoUrls = document.querySelectorAll('.video-url');
+  const videos = [];
+  videoTitles.forEach((title, i) => {
+    const url = videoUrls[i] ? videoUrls[i].value.trim() : '';
+    const titleVal = title.value.trim();
+    if (url) {
+      videos.push({ title: titleVal || 'Untitled Video', url });
+    }
+  });
+  settings.videos = videos;
+  localStorage.setItem('siteSettings', JSON.stringify(settings));
+  showToast('Videos saved');
+}
+
 document.getElementById('addQuestionBtn').addEventListener('click', () => openModal());
 document.getElementById('cancelModal').addEventListener('click', closeModal);
 document.getElementById('saveQuestion').addEventListener('click', saveQuestion);
 document.getElementById('filterLevel').addEventListener('change', (e) => renderQuestions(e.target.value));
 document.getElementById('saveDates').addEventListener('click', saveSettings);
 document.getElementById('saveSocial').addEventListener('click', saveSettings);
+document.getElementById('saveVideos').addEventListener('click', saveVideos);
 
 document.getElementById('questionModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeModal();

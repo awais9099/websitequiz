@@ -630,6 +630,72 @@ a {
   transform: translateX(3px);
 }
 
+/* ===== VIDEOS SECTION ===== */
+.videos-section {
+  padding: 5rem 0;
+  background: white;
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.video-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.video-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-info {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.video-info h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.video-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--danger);
+  white-space: nowrap;
+}
+
 /* ===== TESTIMONIALS ===== */
 .testimonials-section {
   padding: 5rem 0;
@@ -1299,6 +1365,7 @@ a {
   .courses-grid { grid-template-columns: 1fr; gap: 1rem; }
   .course-card { padding: 1.5rem; }
   .testimonials-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .videos-grid { grid-template-columns: 1fr; gap: 1rem; }
   .testimonial-card { padding: 1.5rem; }
   .contact-section { padding: 3rem 0; }
   .contact-section h2 { font-size: 1.5rem; }
