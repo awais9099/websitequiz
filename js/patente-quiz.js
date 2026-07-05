@@ -91,6 +91,10 @@ function startQuiz(quizId) {
   userAnswers = {};
   quizSubmitted = false;
 
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+  }
+
   document.getElementById('examBadge').textContent = quiz.title;
   updateTabs();
   renderGrid();
@@ -321,16 +325,22 @@ function hideTranslation() {
 }
 
 function readQuestion() {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const q = currentQuestions[currentIndex];
-    const utter = new SpeechSynthesisUtterance(q.text);
-    utter.lang = 'it-IT';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
-  } else {
+  if (!('speechSynthesis' in window)) {
     alert('Text-to-speech is not supported in your browser.');
+    return;
   }
+  window.speechSynthesis.cancel();
+
+  const voices = window.speechSynthesis.getVoices();
+  const itVoice = voices.find(v => v.lang.startsWith('it'));
+
+  const q = currentQuestions[currentIndex];
+  const utter = new SpeechSynthesisUtterance(q.text);
+  utter.lang = 'it-IT';
+  utter.rate = 0.9;
+  if (itVoice) utter.voice = itVoice;
+
+  window.speechSynthesis.speak(utter);
 }
 
 function readTranslation() {
@@ -340,13 +350,39 @@ function readTranslation() {
   const text = translationCache[cacheKey];
   if (!text) return;
 
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = currentTranslationLang === 'ur' ? 'ur-PK' : 'en-US';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
+  if (!('speechSynthesis' in window)) {
+    alert('Text-to-speech is not supported in your browser.');
+    return;
   }
+
+  window.speechSynthesis.cancel();
+
+  const voices = window.speechSynthesis.getVoices();
+  const langCode = currentTranslationLang === 'ur' ? 'ur' : 'en';
+
+  let selectedVoice = null;
+  if (langCode === 'ur') {
+    selectedVoice = voices.find(v => v.lang.startsWith('ur'));
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.startsWith('en'));
+    }
+  } else {
+    selectedVoice = voices.find(v => v.lang.startsWith('en'));
+  }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = langCode === 'ur' ? 'ur-PK' : 'en-US';
+  utter.rate = 0.85;
+
+  if (selectedVoice) {
+    utter.voice = selectedVoice;
+  }
+
+  window.speechSynthesis.speak(utter);
+}
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
 }
 
 document.addEventListener('DOMContentLoaded', loadQuizList);
