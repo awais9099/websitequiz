@@ -22,6 +22,7 @@ let firebaseAuth = null;
 let firebaseDb = null;
 
 async function initFirebase() {
+  if (firebaseApp) return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb };
   await loadFirebaseScripts();
   firebaseApp = firebase.initializeApp(firebaseConfig);
   firebaseAuth = firebase.auth();
