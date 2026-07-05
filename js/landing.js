@@ -117,3 +117,29 @@ function animateStats() {
     }, 30);
   });
 }
+
+// Auth state - update navbar
+const navLoginLink = document.getElementById('navLoginLink');
+const navUserMenu = document.getElementById('navUserMenu');
+const navUserName = document.getElementById('navUserName');
+const navLogoutBtn = document.getElementById('navLogoutBtn');
+
+initFirebase().then(() => {
+  onAuthStateChanged(async (user) => {
+    if (user) {
+      const profile = await getStudentProfile(user.uid);
+      const displayName = profile ? profile.name : user.email;
+      navUserName.textContent = displayName || user.email;
+      navLoginLink.style.display = 'none';
+      navUserMenu.style.display = 'block';
+    } else {
+      navLoginLink.style.display = 'block';
+      navUserMenu.style.display = 'none';
+    }
+  });
+});
+
+navLogoutBtn.addEventListener('click', async () => {
+  await signOut();
+  window.location.reload();
+});
