@@ -36,6 +36,7 @@ body {
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -997,7 +998,7 @@ a {
   height: 100%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .video-viewer-card { flex-direction: column; }
   .video-viewer-thumb { width: 100%; height: 160px; }
 }
@@ -1558,6 +1559,7 @@ a {
   display: flex;
   gap: 0.75rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .result-btn {
@@ -2160,6 +2162,17 @@ a {
   .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   .modal { padding: 1.5rem; margin: 0.5rem; }
+
+  .videos-page { margin-top: 92px; }
+  .card-btn { width: 44px; height: 44px; }
+  .footer-socials a { width: 44px; height: 44px; }
+  .data-table .actions .btn { padding: 0.5rem 0.75rem; font-size: 0.8rem; min-height: 44px; }
+  .btn-xs { padding: 0.5rem 0.75rem; font-size: 0.8rem; min-height: 44px; }
+  .video-notes-btn { padding: 0.6rem 1rem; min-height: 44px; }
+  .video-player-overlay { padding: 0.5rem; }
+  .video-player-modal { max-width: 100%; border-radius: 8px; }
+  .video-player-header { padding: 0.75rem 1rem; }
+  .hero-stats { flex-wrap: wrap; gap: 1.5rem; }
 }
 
 @media (max-width: 480px) {
@@ -2181,4 +2194,9 @@ a {
   .question-box { padding: 1rem; }
   .manage-header { margin-top: 84px; }
   .whatsapp-float { width: 48px; height: 48px; font-size: 1.35rem; bottom: 1rem; right: 1rem; }
+  .videos-page { margin-top: 84px; }
+  .auth-card { padding: 1.5rem 1.25rem; }
+  .modal-overlay { padding: 0.5rem; }
+  .modal { padding: 1.25rem; }
+  .hero-stats { flex-wrap: wrap; gap: 0.75rem; }
 }
