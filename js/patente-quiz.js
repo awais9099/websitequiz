@@ -316,4 +316,26 @@ function hideTranslation() {
   document.getElementById('examTranslation').style.display = 'none';
 }
 
+function readQuestion() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const q = currentQuestions[currentIndex];
+    const utter = new SpeechSynthesisUtterance(q.text);
+    utter.lang = 'it-IT';
+    utter.rate = 0.9;
+    utter.onstart = () => {
+      document.getElementById('examTranslation').style.display = 'block';
+      document.getElementById('examTranslation').className = 'exam-translation exam-translation-loading';
+      document.getElementById('examTranslation').innerHTML = '<i class="fas fa-volume-up"></i> Reading...';
+    };
+    utter.onend = () => {
+      document.getElementById('examTranslation').className = 'exam-translation';
+      document.getElementById('examTranslation').innerHTML = '<i class="fas fa-volume-up"></i> ' + q.text;
+    };
+    window.speechSynthesis.speak(utter);
+  } else {
+    alert('Text-to-speech is not supported in your browser.');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', loadQuizList);
