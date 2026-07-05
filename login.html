@@ -135,15 +135,20 @@
           if (!name) { showError('Please enter your name'); return; }
 
           const cred = await signUpWithEmail(email, password);
-          await createStudentProfile(cred.user.uid, {
-            name: name,
-            email: email,
-            phone: phone,
-            role: 'student',
-            level: '',
-            isActive: false,
-            createdAt: new Date().toISOString()
-          });
+          const pending = await findPendingProfile(email);
+          if (pending) {
+            await linkPendingProfile(pending.docId, cred.user.uid);
+          } else {
+            await createStudentProfile(cred.user.uid, {
+              name: name,
+              email: email,
+              phone: phone,
+              role: 'student',
+              level: '',
+              isActive: false,
+              createdAt: new Date().toISOString()
+            });
+          }
           window.location.href = 'videos.html';
         } else {
           await signInWithEmail(email, password);

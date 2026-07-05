@@ -85,13 +85,14 @@ function openStudentModal(title) {
 function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
   editingStudentUid = null;
-  ['sName','sEmail','sPassword','sPhone','sLevel','sActive'].forEach(id => {
+  ['sName','sEmail','sPhone','sLevel','sActive'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (el.tagName === 'SELECT') el.selectedIndex = 0;
       else el.value = '';
     }
   });
+  document.getElementById('sEmail').disabled = false;
 }
 
 async function editStudent(uid) {
@@ -101,8 +102,6 @@ async function editStudent(uid) {
   document.getElementById('sName').value = profile.name || '';
   document.getElementById('sEmail').value = profile.email || '';
   document.getElementById('sEmail').disabled = true;
-  document.getElementById('sPassword').value = '';
-  document.getElementById('sPassword').placeholder = 'Leave blank to keep current';
   document.getElementById('sPhone').value = profile.phone || '';
   document.getElementById('sLevel').value = profile.level || '';
   document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
@@ -112,7 +111,6 @@ async function editStudent(uid) {
 async function saveStudent() {
   const name = document.getElementById('sName').value.trim();
   const email = document.getElementById('sEmail').value.trim();
-  const password = document.getElementById('sPassword').value;
   const phone = document.getElementById('sPhone').value.trim();
   const level = document.getElementById('sLevel').value;
   const isActive = document.getElementById('sActive').value === 'true';
@@ -125,21 +123,17 @@ async function saveStudent() {
     showToast('Student updated');
   } else {
     if (!email) { showToast('Enter an email', 'error'); return; }
-    if (!password || password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
     try {
-      const cred = await signUpWithEmail(email, password);
-      await createStudentProfile(cred.user.uid, {
+      const docId = 'pending_' + email.replace(/[@.]/g, '_');
+      await createStudentProfile(docId, {
         name, email, phone, level, isActive,
         role: 'student',
+        isPending: true,
         createdAt: new Date().toISOString()
       });
-      showToast('Student created');
+      showToast('Student added! They need to register on login page to activate.');
     } catch (err) {
-      if (err.code === 'auth/email-already-in-use') {
-        showToast('This email is already registered', 'error');
-      } else {
-        showToast('Error creating student: ' + err.message, 'error');
-      }
+      showToast('Error adding student: ' + err.message, 'error');
       return;
     }
   }
@@ -388,7 +382,6 @@ function showToast(message, type = 'success') {
 // ===== EVENTS =====
 document.getElementById('addStudentBtn').addEventListener('click', () => {
   document.getElementById('sEmail').disabled = false;
-  document.getElementById('sPassword').placeholder = 'Minimum 6 characters';
   openStudentModal();
 });
 document.getElementById('cancelStudentModal').addEventListener('click', closeStudentModal);

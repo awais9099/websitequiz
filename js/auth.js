@@ -87,3 +87,22 @@ async function changePassword(newPassword) {
   if (!user) throw new Error('No user logged in');
   return user.updatePassword(newPassword);
 }
+
+async function findPendingProfile(email) {
+  const snapshot = await firebaseDb.collection('students')
+    .where('email', '==', email)
+    .where('isPending', '==', true)
+    .get();
+  if (snapshot.empty) return null;
+  const doc = snapshot.docs[0];
+  return { docId: doc.id, ...doc.data() };
+}
+
+async function linkPendingProfile(docId, uid) {
+  const doc = await firebaseDb.collection('students').doc(docId).get();
+  if (!doc.exists) return;
+  const data = doc.data();
+  delete data.isPending;
+  await firebaseDb.collection('students').doc(uid).set({ ...data, uid });
+  await firebaseDb.collection('students').doc(docId).delete();
+}
