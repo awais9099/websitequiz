@@ -313,22 +313,33 @@ async function loadGroups() {
         `;
       }
       const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
+      const isArchived = group.isArchived || false;
+      const groupStudents = allStudents.filter(s => {
+        const gIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+        return gIds.includes(group.id);
+      });
+      const hasInactive = groupStudents.some(s => !s.isActive);
+      const archivedClass = isArchived ? 'group-archived' : '';
+      const inactiveClass = hasInactive && !isArchived ? 'group-has-inactive' : '';
       container.innerHTML += `
-        <div class="group-card">
+        <div class="group-card ${archivedClass} ${inactiveClass}">
           <div class="group-header" onclick="toggleGroupBody(this)">
             <h3>
               <i class="fas fa-layer-group"></i> ${group.name}
               <span class="group-level course-badge ${badgeClass}">${group.level}</span>
+              ${isArchived ? '<span class="group-status-badge archived"><i class="fas fa-archive"></i> Archived</span>' : ''}
+              ${hasInactive && !isArchived ? '<span class="group-status-badge inactive"><i class="fas fa-user-slash"></i> Has inactive students</span>' : ''}
             </h3>
             <div class="group-actions">
               <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();openSectionModal('${group.id}')"><i class="fas fa-plus"></i> Section</button>
               <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editGroup('${group.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-xs" style="background:#e67e22;color:white;" onclick="event.stopPropagation();deactivateGroup('${group.id}')" title="Deactivate all students in this group"><i class="fas fa-user-slash"></i> Deactivate</button>
+              <button class="btn btn-xs" style="background:#e67e22;color:white;" onclick="event.stopPropagation();deactivateGroup('${group.id}')" title="Deactivate all students in this group"><i class="fas fa-user-slash"></i></button>
+              <button class="btn btn-xs" style="background:${isArchived ? '#27ae60' : '#7f8c8d'};color:white;" onclick="event.stopPropagation();toggleArchiveGroup('${group.id}', ${!isArchived})" title="${isArchived ? 'Unarchive' : 'Archive'} group"><i class="fas fa-${isArchived ? 'undo' : 'archive'}"></i></button>
               <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteGroupConfirm('${group.id}')"><i class="fas fa-trash"></i></button>
               <i class="fas fa-chevron-down" style="color:var(--text-light);transition:transform 0.3s;"></i>
             </div>
           </div>
-          <div class="group-body" style="display:none;">
+          <div class="group-body" style="display:${isArchived ? 'none' : 'block'};">
             ${sortedSections.length === 0 ? '<p style="color:var(--text-light);text-align:center;padding:1rem;">No sections yet. Add a section to organize videos.</p>' : sectionsHtml}
           </div>
         </div>
@@ -369,6 +380,21 @@ async function deactivateGroup(groupId) {
 
     showToast(groupStudents.length + ' students deactivated in ' + group.name, 'success');
     loadStudents();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function toggleArchiveGroup(groupId, archive) {
+  const group = allGroups.find(g => g.id === groupId);
+  if (!group) return;
+  const action = archive ? 'archive' : 'unarchive';
+  if (!confirm(action.charAt(0).toUpperCase() + action.slice(1) + ' "' + group.name + '"?')) return;
+
+  try {
+    await firebaseDb.collection('groups').doc(groupId).update({ isArchived: archive });
+    showToast('Group ' + action + 'd', 'success');
+    loadGroups();
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }
