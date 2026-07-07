@@ -575,13 +575,15 @@
       }
 
       showStopOnButton(document.getElementById('readBtn'));
-      const utter = new SpeechSynthesisUtterance(q.text);
-      utter.lang = 'it-IT';
-      utter.rate = 0.9;
-      utter.voice = itVoice;
-      utter.onend = () => hideStopButton();
-      utter.onerror = () => hideStopButton();
-      window.speechSynthesis.speak(utter);
+      setTimeout(() => {
+        const utter = new SpeechSynthesisUtterance(q.text);
+        utter.lang = 'it-IT';
+        utter.rate = 0.9;
+        utter.voice = itVoice;
+        utter.onend = () => hideStopButton();
+        utter.onerror = () => hideStopButton();
+        window.speechSynthesis.speak(utter);
+      }, 100);
     }
 
     function readTranslation(btn) {
@@ -619,13 +621,15 @@
 
       window.speechSynthesis.cancel();
       showStopOnButton(btn);
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = utterLang;
-      utter.rate = 0.85;
-      utter.voice = selectedVoice;
-      utter.onend = () => hideStopButton();
-      utter.onerror = () => hideStopButton();
-      window.speechSynthesis.speak(utter);
+      setTimeout(() => {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = utterLang;
+        utter.rate = 0.85;
+        utter.voice = selectedVoice;
+        utter.onend = () => hideStopButton();
+        utter.onerror = () => hideStopButton();
+        window.speechSynthesis.speak(utter);
+      }, 100);
     }
 
     if ('speechSynthesis' in window) {
