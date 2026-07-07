@@ -66,6 +66,9 @@
         <button class="manage-tab" data-tab="patenteQuiz">
           <i class="fas fa-clipboard-check"></i> Patente Quiz
         </button>
+        <button class="manage-tab" data-tab="courseCards">
+          <i class="fas fa-image"></i> Course Cards
+        </button>
       </div>
     </div>
   </div>
@@ -529,6 +532,79 @@ DOMANDE FALSE
       <div class="modal-actions">
         <button class="btn btn-outline" id="cancelTrickModal" style="color:var(--text);border-color:var(--border);">Cancel</button>
         <button class="btn btn-primary" id="saveTrick">
+          <i class="fas fa-save"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE CARDS TAB -->
+  <div class="tab-panel" id="tab-courseCards">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="font-size:1.25rem;"><i class="fas fa-image"></i> Course Cards</h2>
+      <button class="btn btn-primary" onclick="openCourseCardModal()">
+        <i class="fas fa-plus"></i> Add Card
+      </button>
+    </div>
+    <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.5rem;">
+      Manage cards shown on the landing page. Upload an image for image cards, or leave empty for info cards.
+    </p>
+    <div id="courseCardsList"></div>
+    <div id="noCourseCards" style="display:none;text-align:center;padding:3rem;color:var(--text-light);">
+      <i class="fas fa-image" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+      <p>No course cards yet. Add one to show on the landing page.</p>
+    </div>
+  </div>
+
+  <!-- COURSE CARD MODAL -->
+  <div class="modal-overlay" id="courseCardModal">
+    <div class="modal">
+      <h2 id="courseCardModalTitle">Add Course Card</h2>
+      <div class="form-group">
+        <label for="ccTitle">Course Title</label>
+        <input type="text" id="ccTitle" placeholder="e.g. A2 Italian Course">
+      </div>
+      <div class="form-group">
+        <label for="ccDescription">Description (optional)</label>
+        <textarea id="ccDescription" rows="2" placeholder="Short description of the course"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="ccStartDate">Start Date</label>
+        <input type="date" id="ccStartDate">
+      </div>
+      <div class="form-group">
+        <label for="ccSchedule">Schedule</label>
+        <input type="text" id="ccSchedule" placeholder="e.g. Tue & Thu, 7-9 PM">
+      </div>
+      <div class="form-group">
+        <label for="ccPrice">Price</label>
+        <input type="text" id="ccPrice" placeholder="e.g. €120/month">
+      </div>
+      <div class="form-group">
+        <label>Course Image (optional)</label>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;position:relative;" id="ccImageUploadArea">
+          <input type="file" id="ccImageFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+          <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--primary);margin-bottom:0.5rem;display:block;"></i>
+          <p style="font-size:0.85rem;color:var(--text-light);margin:0;">Click to upload image</p>
+          <p style="font-size:0.75rem;color:var(--text-light);margin:0.25rem 0 0;">Leave empty for info card</p>
+        </div>
+        <div id="ccImagePreview" style="display:none;margin-top:0.75rem;position:relative;">
+          <img id="ccPreviewImg" style="max-width:100%;max-height:200px;border-radius:var(--radius-sm);object-fit:contain;">
+          <button class="btn btn-sm" style="position:absolute;top:4px;right:4px;background:#e74c3c;color:white;border-radius:50%;width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;" onclick="removeCourseCardImage()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="ccActive">Status</label>
+        <select id="ccActive">
+          <option value="true">Active (show on landing page)</option>
+          <option value="false">Inactive (hidden)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeCourseCardModal()" style="color:var(--text);border-color:var(--border);">Cancel</button>
+        <button class="btn btn-primary" id="saveCourseCardBtn" onclick="saveCourseCard()">
           <i class="fas fa-save"></i> Save
         </button>
       </div>

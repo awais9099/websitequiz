@@ -1,7 +1,8 @@
 const FIREBASE_SCRIPTS = [
   'https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js'
+  'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/11.0.1/firebase-storage-compat.js'
 ];
 
 function loadFirebaseScripts() {
@@ -20,14 +21,16 @@ function loadFirebaseScripts() {
 let firebaseApp = null;
 let firebaseAuth = null;
 let firebaseDb = null;
+let firebaseStorage = null;
 
 async function initFirebase() {
-  if (firebaseApp) return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb };
+  if (firebaseApp) return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb, storage: firebaseStorage };
   await loadFirebaseScripts();
   firebaseApp = firebase.initializeApp(firebaseConfig);
   firebaseAuth = firebase.auth();
   firebaseDb = firebase.firestore();
-  return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb };
+  firebaseStorage = firebase.storage();
+  return { app: firebaseApp, auth: firebaseAuth, db: firebaseDb, storage: firebaseStorage };
 }
 
 function getCurrentUser() {
@@ -268,4 +271,44 @@ async function bulkImportPatenteQuizzesTest(quizzes) {
     batch.set(ref, quiz);
   });
   return batch.commit();
+}
+
+// ===== COURSE CARDS =====
+async function createCourseCard(data) {
+  const ref = await firebaseDb.collection('courseCards').add(data);
+  return ref.id;
+}
+
+async function getAllCourseCards() {
+  const snapshot = await firebaseDb.collection('courseCards').orderBy('createdAt', 'desc').get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getActiveCourseCards() {
+  const snapshot = await firebaseDb.collection('courseCards').where('isActive', '==', true).get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function updateCourseCard(cardId, data) {
+  return firebaseDb.collection('courseCards').doc(cardId).update(data);
+}
+
+async function deleteCourseCard(cardId) {
+  return firebaseDb.collection('courseCards').doc(cardId).delete();
+}
+
+// ===== IMAGE UPLOAD =====
+async function uploadCourseCardImage(file) {
+  const fileName = 'course-cards/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+  const ref = firebaseStorage.ref(fileName);
+  await ref.put(file);
+  return ref.getDownloadURL();
+}
+
+async function deleteCourseCardImage(imageUrl) {
+  if (!imageUrl || !imageUrl.includes('firebasestorage')) return;
+  try {
+    const ref = firebaseStorage.refFromURL(imageUrl);
+    await ref.delete();
+  } catch (e) {}
 }

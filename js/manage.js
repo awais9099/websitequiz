@@ -62,6 +62,7 @@ TABS.forEach(tab => {
       loadPatenteQuizzes();
       loadTestQuizzes();
     }
+    if (tab.dataset.tab === 'courseCards') loadCourseCards();
   });
 });
 
@@ -1124,6 +1125,180 @@ async function clearAllTestQuizzesConfirm() {
     await deleteAllPatenteQuizzesTest();
     showToast('All test quizzes deleted', 'success');
     loadTestQuizzes();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// ===== COURSE CARDS =====
+let allCourseCards = [];
+let editingCourseCardId = null;
+let ccSelectedFile = null;
+let ccCurrentImageUrl = null;
+
+async function loadCourseCards() {
+  try {
+    allCourseCards = await getAllCourseCards();
+    renderCourseCards();
+  } catch (err) {
+    showToast('Error loading course cards: ' + err.message, 'error');
+  }
+}
+
+function renderCourseCards() {
+  const container = document.getElementById('courseCardsList');
+  const noCards = document.getElementById('noCourseCards');
+  if (allCourseCards.length === 0) {
+    container.innerHTML = '';
+    noCards.style.display = 'block';
+    return;
+  }
+  noCards.style.display = 'none';
+  container.innerHTML = allCourseCards.map(card => {
+    const imageHtml = card.imageUrl
+      ? `<img src="${card.imageUrl}" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:0.75rem;">`
+      : `<div style="background:var(--primary-light);color:var(--primary);padding:1rem;border-radius:var(--radius-sm);text-align:center;margin-bottom:0.75rem;"><i class="fas fa-info-circle" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Info Card</div>`;
+    return `
+      <div class="quiz-card" style="margin-bottom:1rem;${card.isActive ? '' : 'opacity:0.5;'}">
+        ${imageHtml}
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+          <div>
+            <h3 style="font-size:1rem;margin-bottom:0.25rem;">${card.title}</h3>
+            ${card.description ? `<p style="font-size:0.85rem;color:var(--text-light);margin-bottom:0.25rem;">${card.description}</p>` : ''}
+            ${card.startDate ? `<p style="font-size:0.8rem;"><i class="fas fa-calendar"></i> ${card.startDate}</p>` : ''}
+            ${card.schedule ? `<p style="font-size:0.8rem;"><i class="fas fa-clock"></i> ${card.schedule}</p>` : ''}
+            ${card.price ? `<p style="font-size:0.8rem;font-weight:600;color:var(--primary);">${card.price}</p>` : ''}
+            <span style="font-size:0.75rem;color:${card.isActive ? 'var(--accent)' : 'var(--warning)'};">${card.isActive ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-secondary btn-sm" onclick="editCourseCard('${card.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm" style="background:${card.isActive ? 'var(--warning)' : 'var(--accent)'};color:white;" onclick="toggleCourseCardActive('${card.id}', ${!card.isActive})">
+              <i class="fas fa-${card.isActive ? 'eye-slash' : 'eye'}"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCourseCardConfirm('${card.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openCourseCardModal(card) {
+  editingCourseCardId = card ? card.id : null;
+  ccSelectedFile = null;
+  ccCurrentImageUrl = card ? (card.imageUrl || null) : null;
+  document.getElementById('courseCardModalTitle').textContent = card ? 'Edit Course Card' : 'Add Course Card';
+  document.getElementById('ccTitle').value = card ? card.title : '';
+  document.getElementById('ccDescription').value = card ? (card.description || '') : '';
+  document.getElementById('ccStartDate').value = card ? (card.startDate || '') : '';
+  document.getElementById('ccSchedule').value = card ? (card.schedule || '') : '';
+  document.getElementById('ccPrice').value = card ? (card.price || '') : '';
+  document.getElementById('ccActive').value = card ? (card.isActive ? 'true' : 'false') : 'true';
+  const preview = document.getElementById('ccImagePreview');
+  const uploadArea = document.getElementById('ccImageUploadArea');
+  if (card && card.imageUrl) {
+    document.getElementById('ccPreviewImg').src = card.imageUrl;
+    preview.style.display = 'block';
+    uploadArea.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+    uploadArea.style.display = 'block';
+  }
+  document.getElementById('courseCardModal').classList.add('active');
+}
+
+function closeCourseCardModal() {
+  document.getElementById('courseCardModal').classList.remove('active');
+  editingCourseCardId = null;
+  ccSelectedFile = null;
+  ccCurrentImageUrl = null;
+}
+
+document.getElementById('ccImageFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  ccSelectedFile = file;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById('ccPreviewImg').src = ev.target.result;
+    document.getElementById('ccImagePreview').style.display = 'block';
+    document.getElementById('ccImageUploadArea').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+function removeCourseCardImage() {
+  ccSelectedFile = null;
+  ccCurrentImageUrl = null;
+  document.getElementById('ccImagePreview').style.display = 'none';
+  document.getElementById('ccImageUploadArea').style.display = 'block';
+  document.getElementById('ccImageFile').value = '';
+}
+
+async function saveCourseCard() {
+  const title = document.getElementById('ccTitle').value.trim();
+  if (!title) { showToast('Enter a course title', 'error'); return; }
+  const description = document.getElementById('ccDescription').value.trim();
+  const startDate = document.getElementById('ccStartDate').value;
+  const schedule = document.getElementById('ccSchedule').value.trim();
+  const price = document.getElementById('ccPrice').value.trim();
+  const isActive = document.getElementById('ccActive').value === 'true';
+
+  const saveBtn = document.getElementById('saveCourseCardBtn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+  try {
+    let imageUrl = ccCurrentImageUrl;
+
+    if (ccSelectedFile) {
+      if (ccCurrentImageUrl) await deleteCourseCardImage(ccCurrentImageUrl);
+      imageUrl = await uploadCourseCardImage(ccSelectedFile);
+    }
+
+    const data = { title, description, startDate, schedule, price, imageUrl, isActive };
+
+    if (editingCourseCardId) {
+      await updateCourseCard(editingCourseCardId, data);
+      showToast('Course card updated');
+    } else {
+      data.createdAt = new Date().toISOString();
+      await createCourseCard(data);
+      showToast('Course card created');
+    }
+    closeCourseCardModal();
+    loadCourseCards();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+  }
+}
+
+async function editCourseCard(cardId) {
+  const card = allCourseCards.find(c => c.id === cardId);
+  if (card) openCourseCardModal(card);
+}
+
+async function toggleCourseCardActive(cardId, newActive) {
+  try {
+    await updateCourseCard(cardId, { isActive: newActive });
+    showToast('Card ' + (newActive ? 'activated' : 'deactivated'));
+    loadCourseCards();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function deleteCourseCardConfirm(cardId) {
+  if (!confirm('Delete this course card? This cannot be undone.')) return;
+  try {
+    const card = allCourseCards.find(c => c.id === cardId);
+    if (card && card.imageUrl) await deleteCourseCardImage(card.imageUrl);
+    await deleteCourseCard(cardId);
+    showToast('Course card deleted');
+    loadCourseCards();
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }

@@ -208,3 +208,41 @@ saveChangePw.addEventListener('click', async () => {
     changePwError.style.display = 'block';
   }
 });
+
+// ===== UPCOMING COURSES =====
+async function loadCourseCards() {
+  try {
+    const cards = await getActiveCourseCards();
+    if (cards.length === 0) return;
+    document.getElementById('upcoming-courses').style.display = 'block';
+    const container = document.getElementById('courseCardsContainer');
+    container.innerHTML = cards.map(card => {
+      if (card.imageUrl) {
+        return `
+          <a href="https://wa.me/393517080455?text=Hi!%20I'm%20interested%20in%20the%20${encodeURIComponent(card.title)}%20course" target="_blank" style="text-decoration:none;display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+            <img src="${card.imageUrl}" alt="${card.title}" style="width:100%;height:200px;object-fit:cover;display:block;">
+          </a>
+        `;
+      } else {
+        return `
+          <div style="background:white;border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+            <h3 style="color:var(--primary);margin-bottom:0.5rem;">${card.title}</h3>
+            ${card.description ? `<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:0.75rem;">${card.description}</p>` : ''}
+            <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">
+              ${card.startDate ? `<p style="font-size:0.85rem;"><i class="fas fa-calendar" style="color:var(--primary);width:20px;"></i> ${card.startDate}</p>` : ''}
+              ${card.schedule ? `<p style="font-size:0.85rem;"><i class="fas fa-clock" style="color:var(--primary);width:20px;"></i> ${card.schedule}</p>` : ''}
+              ${card.price ? `<p style="font-size:0.9rem;font-weight:700;color:var(--primary);"><i class="fas fa-tag" style="width:20px;"></i> ${card.price}</p>` : ''}
+            </div>
+            <a href="https://wa.me/393517080455?text=Hi!%20I'm%20interested%20in%20the%20${encodeURIComponent(card.title)}%20course" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;background:#25d366;">
+              <i class="fab fa-whatsapp"></i> Enroll Now
+            </a>
+          </div>
+        `;
+      }
+    }).join('');
+  } catch (err) {
+    console.warn('Could not load course cards:', err);
+  }
+}
+
+initFirebase().then(() => loadCourseCards());
