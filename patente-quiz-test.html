@@ -552,7 +552,10 @@
       window.speechSynthesis.getVoices();
     }
 
-    document.addEventListener('DOMContentLoaded', loadQuizList);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initFirebase();
+      loadQuizList();
+    });
   </script>
 </body>
 </html>
