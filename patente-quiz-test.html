@@ -155,7 +155,8 @@
           <div class="exam-question-number" id="examQNum">1</div>
           <div class="exam-question-text" id="examQText"></div>
           <div class="exam-translate-bar">
-            <button class="exam-translate-btn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
+            <button class="exam-translate-btn" id="readBtn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
+            <button class="exam-translate-btn" id="stopAudioBtn" onclick="stopAudio()" style="display:none;background:#e74c3c;color:white;border-color:#e74c3c;"><i class="fas fa-stop"></i> Stop</button>
             <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
             <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
             <button class="exam-translate-btn" onclick="translateQuestion('pa')"><i class="fas fa-globe"></i> Punjabi</button>
@@ -348,6 +349,7 @@
     }
 
     function renderQuestion() {
+      stopAudio();
       const q = currentQuestions[currentIndex];
       document.getElementById('examQNum').textContent = currentIndex + 1;
       document.getElementById('examQText').textContent = q.text;
@@ -399,22 +401,24 @@
 
     function selectAnswer(answer) {
       if (quizSubmitted) return;
+      stopAudio();
       const q = currentQuestions[currentIndex];
       userAnswers[q.index] = answer;
       renderQuestion();
     }
 
     function goToQuestion(idx) {
+      stopAudio();
       currentIndex = idx;
       renderQuestion();
     }
 
     function examPrev() {
-      if (currentIndex > 0) { currentIndex--; renderQuestion(); }
+      if (currentIndex > 0) { stopAudio(); currentIndex--; renderQuestion(); }
     }
 
     function examNext() {
-      if (currentIndex < totalQuestionsInQuiz - 1) { currentIndex++; renderQuestion(); }
+      if (currentIndex < totalQuestionsInQuiz - 1) { stopAudio(); currentIndex++; renderQuestion(); }
     }
 
     function toggleFullGrid() {
@@ -519,12 +523,30 @@
       currentTranslationLang = null;
     }
 
+    function showStopButton() {
+      document.getElementById('readBtn').style.display = 'none';
+      document.getElementById('stopAudioBtn').style.display = 'inline-flex';
+    }
+
+    function hideStopButton() {
+      document.getElementById('readBtn').style.display = 'inline-flex';
+      document.getElementById('stopAudioBtn').style.display = 'none';
+    }
+
+    function stopAudio() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      hideStopButton();
+    }
+
     function readQuestion() {
       if (!('speechSynthesis' in window)) {
         alert('Text-to-speech is not supported in your browser.');
         return;
       }
       window.speechSynthesis.cancel();
+      showStopButton();
       const voices = window.speechSynthesis.getVoices();
       const itVoice = voices.find(v => v.lang.startsWith('it'));
       const q = currentQuestions[currentIndex];
@@ -532,6 +554,8 @@
       utter.lang = 'it-IT';
       utter.rate = 0.9;
       if (itVoice) utter.voice = itVoice;
+      utter.onend = () => hideStopButton();
+      utter.onerror = () => hideStopButton();
       window.speechSynthesis.speak(utter);
     }
 
@@ -547,6 +571,7 @@
         return;
       }
       window.speechSynthesis.cancel();
+      showStopButton();
       const voices = window.speechSynthesis.getVoices();
       const langCode = currentTranslationLang;
       let selectedVoice = null;
@@ -564,6 +589,8 @@
       utter.lang = langCode === 'ur' ? 'ur-PK' : langCode === 'pa' ? 'pa-IN' : 'en-US';
       utter.rate = 0.85;
       if (selectedVoice) utter.voice = selectedVoice;
+      utter.onend = () => hideStopButton();
+      utter.onerror = () => hideStopButton();
       window.speechSynthesis.speak(utter);
     }
 
