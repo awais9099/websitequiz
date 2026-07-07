@@ -46,7 +46,10 @@ TABS.forEach(tab => {
     if (tab.dataset.tab === 'students') loadStudents();
     if (tab.dataset.tab === 'groups') loadGroups();
     if (tab.dataset.tab === 'tricks') loadTricks();
-    if (tab.dataset.tab === 'patenteQuiz') loadPatenteQuizzes();
+    if (tab.dataset.tab === 'patenteQuiz') {
+      loadPatenteQuizzes();
+      loadTestQuizzes();
+    }
   });
 });
 
@@ -856,6 +859,156 @@ async function clearAllPatenteQuizzesConfirm() {
     }
     showToast('All quizzes deleted', 'success');
     loadPatenteQuizzes();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// ===== OPEN SOURCE IMPORT (Test Collection) =====
+const TOPIC_MAP = {
+  'definizioni-generali-doveri-strada': { title: 'Definizioni generali e doveri', blockNumber: 1 },
+  'segnali-pericolo': { title: 'Segnali di pericolo', blockNumber: 2 },
+  'segnali-divieto': { title: 'Segnali di divieto', blockNumber: 3 },
+  'segnali-obbligo': { title: "Segnali d'obbligo", blockNumber: 4 },
+  'segnali-precedenza': { title: 'Segnali di precedenza', blockNumber: 5 },
+  'segnaletica-orizzontale': { title: 'Segnaletica orizzontale', blockNumber: 6 },
+  'segnalazioni-semaforiche': { title: 'Segnalazioni semaforiche', blockNumber: 7 },
+  'segnali-indicazione': { title: 'Segnali di indicazione', blockNumber: 8 },
+  'segnali-complementari': { title: 'Segnali complementari e temporanei', blockNumber: 9 },
+  'pannelli-integrativi': { title: 'Pannelli integrativi', blockNumber: 10 },
+  'limiti-velocita': { title: 'Limiti di velocita', blockNumber: 11 },
+  'distanza-sicurezza': { title: 'Distanza di sicurezza', blockNumber: 12 },
+  'norme-circolazione': { title: 'Norme sulla circolazione', blockNumber: 13 },
+  'precedenza': { title: 'Esempi di precedenza', blockNumber: 14 },
+  'sorpasso': { title: 'Norme sul sorpasso', blockNumber: 15 },
+  'fermata-sosta': { title: 'Fermata, sosta, arresto', blockNumber: 16 },
+  'norme-varie': { title: 'Norme varie', blockNumber: 17 },
+  'luci-dispositivi': { title: 'Uso delle luci', blockNumber: 18 },
+  'sicurezza': { title: 'Cinture e sicurezza', blockNumber: 19 },
+  'patenti-documenti': { title: 'Patenti e documenti', blockNumber: 20 },
+  'incidenti': { title: 'Incidenti stradali', blockNumber: 21 },
+  'guida-condizioni': { title: 'Guida e condizioni fisiche', blockNumber: 22 },
+  'responsabilita': { title: 'Responsabilita e assicurazione', blockNumber: 23 },
+  'ambiente': { title: 'Ambiente e inquinamento', blockNumber: 24 },
+  'veicolo': { title: 'Elementi del veicolo', blockNumber: 25 }
+};
+
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/Ed0ardo/QuizPatenteB/main';
+
+async function importOpenSourceQuizzes() {
+  const btn = document.getElementById('importOpenSourceBtn');
+  const status = document.getElementById('importOpenSourceStatus');
+  if (!btn || !status) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+  status.textContent = 'Fetching questions from GitHub...';
+  status.style.color = 'var(--primary)';
+
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/Ed0ardo/QuizPatenteB/main/quizPatenteB2023.json');
+    if (!res.ok) throw new Error('Failed to fetch JSON');
+    const data = await res.json();
+
+    status.textContent = 'Processing questions...';
+
+    const quizzes = [];
+    let totalQ = 0;
+
+    for (const [topicKey, subTopics] of Object.entries(data)) {
+      const mapping = Object.values(TOPIC_MAP).find(t =>
+        topicKey.toLowerCase().includes(t.title.toLowerCase().split(' ')[0])
+      ) || { title: topicKey, blockNumber: 99 };
+
+      const questions = [];
+      for (const [subKey, qList] of Object.entries(subTopics)) {
+        for (const q of qList) {
+          questions.push({
+            text: q.q,
+            answer: q.a,
+            image: q.img ? GITHUB_RAW_BASE + q.img : null,
+            order: questions.length
+          });
+        }
+      }
+
+      if (questions.length > 0) {
+        quizzes.push({
+          title: mapping.title,
+          blockNumber: mapping.blockNumber,
+          questions,
+          totalQuestions: questions.length,
+          source: 'open-source',
+          createdAt: new Date().toISOString()
+        });
+        totalQ += questions.length;
+      }
+    }
+
+    status.textContent = `Importing ${quizzes.length} quizzes (${totalQ} questions) to Firestore...`;
+
+    await bulkImportPatenteQuizzesTest(quizzes);
+
+    status.textContent = `Done! ${quizzes.length} quizzes imported with ${totalQ} questions.`;
+    status.style.color = 'var(--success)';
+    btn.innerHTML = '<i class="fas fa-check"></i> Import Complete';
+    showToast(`Imported ${quizzes.length} quizzes (${totalQ} questions)`, 'success');
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    status.style.color = 'var(--danger)';
+    btn.innerHTML = '<i class="fas fa-download"></i> Import from GitHub';
+    showToast('Import failed: ' + err.message, 'error');
+  }
+  btn.disabled = false;
+}
+
+async function loadTestQuizzes() {
+  const container = document.getElementById('testQuizzesList');
+  const noQuizzes = document.getElementById('noTestQuizzes');
+  if (!container) return;
+
+  try {
+    const quizzes = await getAllPatenteQuizzesTest();
+    document.getElementById('testQuizCount').textContent = quizzes.length;
+    if (quizzes.length === 0) {
+      container.innerHTML = '';
+      if (noQuizzes) noQuizzes.style.display = 'block';
+      return;
+    }
+    if (noQuizzes) noQuizzes.style.display = 'none';
+    container.innerHTML = quizzes.map(q => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border-bottom:1px solid var(--border);">
+        <div>
+          <strong style="color:var(--primary);">${q.title}</strong>
+          <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">Blocco: ${q.blockNumber}</span>
+          <span style="font-size:0.8rem;color:var(--text-light);margin-left:0.5rem;">| ${q.totalQuestions} questions</span>
+          ${q.source ? '<span style="font-size:0.7rem;color:#9c27b0;margin-left:0.5rem;">[' + q.source + ']</span>' : ''}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteTestQuizConfirm('${q.id}')"><i class="fas fa-trash"></i></button>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = '<p style="color:var(--danger);text-align:center;padding:1rem;">Error: ' + err.message + '</p>';
+  }
+}
+
+async function deleteTestQuizConfirm(quizId) {
+  if (!confirm('Delete this test quiz?')) return;
+  try {
+    await deletePatenteQuizTest(quizId);
+    showToast('Deleted', 'success');
+    loadTestQuizzes();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function clearAllTestQuizzesConfirm() {
+  if (!confirm('Delete ALL test quizzes? This cannot be undone.')) return;
+  try {
+    await deleteAllPatenteQuizzesTest();
+    showToast('All test quizzes deleted', 'success');
+    loadTestQuizzes();
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }

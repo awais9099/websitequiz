@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Patente Quiz - Open Source</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#9c27b0">
+  <style>
+    body { background: #f3e5f5; }
+    .exam-wrapper { max-width: 850px; margin: 0 auto; padding: 0.5rem; font-family: Arial, Helvetica, sans-serif; }
+    .exam-header { background: linear-gradient(135deg, #7b1fa2, #9c27b0); color: white; padding: 0.6rem 1rem; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .exam-header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .exam-header-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .exam-header-subtitle { font-size: 0.7rem; opacity: 0.8; }
+    .exam-badge { background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .exam-tabs { display: flex; background: #ce93d8; }
+    .exam-tab { flex: 1; padding: 0.6rem; text-align: center; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #4a148c; transition: all 0.2s; border-bottom: 3px solid transparent; }
+    .exam-tab.active { background: white; border-bottom-color: #9c27b0; color: #4a148c; }
+    .exam-tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+    .exam-grid { display: flex; flex-wrap: wrap; gap: 3px; padding: 0.5rem; background: #e1bee7; justify-content: center; }
+    .exam-dot { width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 2px solid #ba68c8; background: white; color: #4a148c; transition: all 0.15s; }
+    .exam-dot.current { background: #7b1fa2; color: white; border-color: #7b1fa2; }
+    .exam-dot.answered { background: #9c27b0; color: white; border-color: #9c27b0; }
+    .exam-dot.wrong { background: #c0392b; color: white; border-color: #c0392b; }
+    .exam-dot.correct { background: #27ae60; color: white; border-color: #27ae60; }
+    .exam-body { display: flex; background: white; min-height: 300px; border: 1px solid #ce93d8; }
+    .exam-image-area { width: 200px; background: #faf5fc; border-right: 1px solid #ce93d8; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.8rem; overflow: hidden; }
+    .exam-image-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .exam-question-area { flex: 1; padding: 1.5rem; position: relative; }
+    .exam-question-number { position: absolute; top: 0.75rem; right: 1rem; font-size: 2rem; font-weight: 900; color: #ce93d8; }
+    .exam-question-text { font-size: 1rem; line-height: 1.7; color: #333; padding-right: 2rem; }
+    .exam-answers { display: flex; justify-content: center; gap: 2rem; padding: 1.5rem; background: white; border: 1px solid #ce93d8; border-top: none; }
+    .exam-vf-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #4a148c; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s; position: relative; }
+    .exam-vf-btn .vf-label { font-size: 0.65rem; font-weight: 600; color: #333; margin-bottom: 2px; }
+    .exam-vf-btn .vf-letter { font-size: 2rem; font-weight: 900; color: #4a148c; font-family: serif; }
+    .exam-vf-btn:hover { border-color: #7b1fa2; background: #faf5fc; }
+    .exam-vf-btn.selected { border-color: #4a148c; background: #4a148c; }
+    .exam-vf-btn.selected .vf-label { color: white; }
+    .exam-vf-btn.selected .vf-letter { color: white; }
+    .exam-footer { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #e1bee7; border-radius: 0 0 8px 8px; }
+    .exam-timer { font-size: 1.1rem; font-weight: 700; color: #4a148c; display: flex; align-items: center; gap: 0.5rem; }
+    .exam-timer.warning { color: #e74c3c; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .exam-nav { display: flex; gap: 0.5rem; align-items: center; }
+    .exam-nav-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ba68c8; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #4a148c; font-size: 1rem; transition: all 0.2s; }
+    .exam-nav-btn:hover { background: #7b1fa2; color: white; border-color: #7b1fa2; }
+    .exam-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .exam-correggi { padding: 0.6rem 2rem; background: white; border: 2px solid #ba68c8; border-radius: 6px; font-size: 0.9rem; font-weight: 700; color: #4a148c; cursor: pointer; transition: all 0.2s; }
+    .exam-correggi:hover { background: #7b1fa2; color: white; }
+    .exam-correggi:disabled { opacity: 0.5; cursor: not-allowed; }
+    .exam-results-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 1rem; }
+    .exam-results-overlay.active { display: flex; }
+    .exam-results-card { background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 100%; text-align: center; max-height: 90vh; overflow-y: auto; }
+    .exam-results-score { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid; }
+    .exam-results-score.pass { border-color: #27ae60; background: #eafaf1; }
+    .exam-results-score.fail { border-color: #e74c3c; background: #fdedec; }
+    .exam-results-score .score-num { font-size: 2.2rem; font-weight: 900; }
+    .exam-results-score .score-label { font-size: 0.8rem; }
+    .exam-select-wrapper { text-align: center; padding: 3rem 1rem; }
+    .exam-select-wrapper h1 { color: #7b1fa2; margin-bottom: 0.5rem; }
+    .exam-select-wrapper p { color: #666; margin-bottom: 2rem; }
+    .quiz-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; max-width: 800px; margin: 0 auto; }
+    .quiz-select-card { background: white; border: 2px solid #ce93d8; border-radius: 8px; padding: 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .quiz-select-card:hover { border-color: #7b1fa2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .quiz-select-card h3 { color: #7b1fa2; margin-bottom: 0.25rem; font-size: 1rem; }
+    .quiz-select-card p { color: #666; font-size: 0.85rem; margin: 0; }
+    .review-list { text-align: left; margin-top: 1.5rem; }
+    .review-item { padding: 0.6rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; border-left: 4px solid; }
+    .review-item.correct { background: #eafaf1; border-color: #27ae60; }
+    .review-item.wrong { background: #fdedec; border-color: #e74c3c; }
+    .exam-translate-bar { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .exam-translate-btn { padding: 0.35rem 0.75rem; border: 1px solid #ce93d8; border-radius: 4px; background: #faf5fc; color: #4a148c; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+    .exam-translate-btn:hover { background: #7b1fa2; color: white; border-color: #7b1fa2; }
+    .exam-translation { margin-top: 0.75rem; padding: 0.75rem; background: #fffde7; border: 1px solid #f0e68c; border-radius: 6px; font-size: 1.25rem; color: #333; line-height: 1.8; }
+    .test-banner { background: #9c27b0; color: white; text-align: center; padding: 0.5rem; font-size: 0.85rem; font-weight: 600; }
+    .test-banner a { color: white; text-decoration: underline; }
+    @media (max-width: 768px) {
+      .exam-body { flex-direction: column; }
+      .exam-image-area { width: 100%; height: 100px; border-right: none; border-bottom: 1px solid #ce93d8; }
+      .exam-vf-btn { width: 70px; height: 70px; }
+      .exam-vf-btn .vf-letter { font-size: 1.7rem; }
+      .exam-dot { width: 24px; height: 24px; font-size: 0.7rem; }
+      .exam-tab { font-size: 0.75rem; padding: 0.5rem 0.25rem; }
+    }
+    @media (max-width: 480px) {
+      .exam-header { flex-direction: column; gap: 0.5rem; text-align: center; }
+      .exam-question-text { font-size: 0.9rem; }
+      .exam-footer { flex-direction: column; gap: 0.75rem; }
+      .exam-nav { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="test-banner">
+    <i class="fas fa-flask"></i> TEST MODE — Open Source Questions (patenteQuizzesTest) — <a href="manage.html">Back to Manage</a>
+  </div>
+
+  <nav class="navbar" id="navbar" style="margin-top:36px;">
+    <div class="nav-brand">Learn Italian <span>with Iqra</span></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="videos.html">Videos</a></li>
+      <li><a href="patente-quiz.html">Patente Quiz</a></li>
+    </ul>
+  </nav>
+
+  <div class="exam-wrapper" style="margin-top:80px;">
+
+    <!-- STEP 1: SELECT QUIZ -->
+    <div id="exam-step-select">
+      <div class="exam-select-wrapper">
+        <h1><i class="fas fa-flask"></i> Test Patente Quiz</h1>
+        <p>Open source questions from official Italian database. 7,139 questions organized by topic.</p>
+        <div class="quiz-cards-grid" id="examQuizList"></div>
+        <div id="examNoQuizzes" style="display:none;color:#666;padding:3rem;">
+          <i class="fas fa-clipboard" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+          <p>No test quizzes imported yet. Go to <a href="manage.html">Manage</a> to import from GitHub.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: QUIZ -->
+    <div id="exam-step-quiz" style="display:none;">
+      <div class="exam-header">
+        <div class="exam-header-left">
+          <div>
+            <div class="exam-header-title">Scheda Esame</div>
+            <div class="exam-header-subtitle">TEST — Open Source Database</div>
+          </div>
+        </div>
+        <div class="exam-badge" id="examBadge">TEST</div>
+      </div>
+
+      <div class="exam-tabs" id="examTabs">
+        <button class="exam-tab active" onclick="switchTab(0)">Domande 1-10</button>
+        <button class="exam-tab" onclick="switchTab(1)">Domande 11-20</button>
+        <button class="exam-tab" onclick="switchTab(2)">Domande 21-30</button>
+      </div>
+
+      <div class="exam-grid" id="examGrid"></div>
+
+      <div class="exam-body">
+        <div class="exam-image-area">
+          <div id="examImagePlaceholder"><i class="fas fa-image" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>No image</div>
+          <img id="examImage" src="" alt="Road sign" style="display:none;">
+        </div>
+        <div class="exam-question-area">
+          <div class="exam-question-number" id="examQNum">1</div>
+          <div class="exam-question-text" id="examQText"></div>
+          <div class="exam-translate-bar">
+            <button class="exam-translate-btn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
+            <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
+            <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
+            <button class="exam-translate-btn" onclick="hideTranslation()"><i class="fas fa-times"></i> Hide</button>
+          </div>
+          <div class="exam-translation" id="examTranslation" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="exam-answers">
+        <button class="exam-vf-btn" id="examBtnVero" onclick="selectAnswer(true)">
+          <span class="vf-label">Vero</span>
+          <span class="vf-letter">V</span>
+        </button>
+        <button class="exam-vf-btn" id="examBtnFalso" onclick="selectAnswer(false)">
+          <span class="vf-label">Falso</span>
+          <span class="vf-letter">F</span>
+        </button>
+      </div>
+
+      <div class="exam-footer">
+        <div class="exam-timer" id="examTimer">
+          <i class="fas fa-clock"></i> <span id="examTimerText">20:00</span>
+        </div>
+        <div style="text-align:center;">
+          <button class="exam-correggi" id="examCorreggiBtn" onclick="correggi()" disabled>
+            <i class="fas fa-check-circle"></i> Correggi
+          </button>
+        </div>
+        <div class="exam-nav">
+          <button class="exam-nav-btn" id="examListBtn" onclick="toggleFullGrid()" title="Question List">
+            <i class="fas fa-list"></i>
+          </button>
+          <button class="exam-nav-btn" id="examPrevBtn" onclick="examPrev()">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="exam-nav-btn" id="examNextBtn" onclick="examNext()">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="exam-grid" id="examFullGrid" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS OVERLAY -->
+  <div class="exam-results-overlay" id="examResultsOverlay">
+    <div class="exam-results-card">
+      <h2 id="examResultTitle">Risultati</h2>
+      <div class="exam-results-score" id="examResultScore">
+        <span class="score-num" id="examResultNum">0</span>
+        <span class="score-label" id="examResultLabel">/ 30</span>
+      </div>
+      <p id="examResultMsg" style="margin-bottom:0.5rem;"></p>
+      <p id="examResultPercent" style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;"></p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+        <button class="btn btn-primary" onclick="retryQuiz()"><i class="fas fa-redo"></i> Riprova</button>
+        <button class="btn btn-outline" onclick="closeResults(); showStep('select');" style="color:#7b1fa2;border-color:#ce93d8;"><i class="fas fa-list"></i> Schede</button>
+      </div>
+      <div class="review-list" id="examReviewList"></div>
+    </div>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Override collection name for test page
+    const TEST_COLLECTION = 'patenteQuizzesTest';
+    const allQuizzes = [];
+
+    async function loadQuizList() {
+      try {
+        const quizzes = await getAllPatenteQuizzesTest();
+        allQuizzes.length = 0;
+        allQuizzes.push(...quizzes.sort((a, b) => a.blockNumber - b.blockNumber));
+
+        const list = document.getElementById('examQuizList');
+        const noQuizzes = document.getElementById('examNoQuizzes');
+
+        if (allQuizzes.length === 0) {
+          list.innerHTML = '';
+          noQuizzes.style.display = 'block';
+          return;
+        }
+
+        noQuizzes.style.display = 'none';
+        list.innerHTML = allQuizzes.map(q => `
+          <div class="quiz-select-card" onclick="startQuiz('${q.id}')">
+            <h3><i class="fas fa-list-ol"></i> ${q.title}</h3>
+            <p><i class="fas fa-question-circle"></i> ${q.totalQuestions} questions</p>
+            <p style="font-size:0.75rem;color:#9c27b0;">Blocco ${q.blockNumber}</p>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('examNoQuizzes').style.display = 'block';
+        document.getElementById('examNoQuizzes').innerHTML = '<p style="color:#e74c3c;">Error loading: ' + err.message + '</p>';
+      }
+    }
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let userAnswers = {};
+    let quizSubmitted = false;
+    let currentQuizId = null;
+    let timerInterval = null;
+    let timeLeft = 1200;
+    let totalQuestionsInQuiz = 30;
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function showStep(step) {
+      document.getElementById('exam-step-select').style.display = step === 'select' ? 'block' : 'none';
+      document.getElementById('exam-step-quiz').style.display = step === 'quiz' ? 'block' : 'none';
+    }
+
+    function startQuiz(quizId) {
+      const quiz = allQuizzes.find(q => q.id === quizId);
+      if (!quiz) return;
+      currentQuizId = quizId;
+
+      let questions = shuffleArray([...quiz.questions]);
+      totalQuestionsInQuiz = questions.length;
+
+      currentQuestions = questions.map((q, i) => ({ ...q, index: i }));
+      currentIndex = 0;
+      userAnswers = {};
+      quizSubmitted = false;
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
+
+      showStep('quiz');
+      renderQuestion();
+      startTimer();
+    }
+
+    function startTimer() {
+      timeLeft = 1200;
+      updateTimerDisplay();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          correggi();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const min = Math.floor(timeLeft / 60);
+      const sec = timeLeft % 60;
+      document.getElementById('examTimerText').textContent = min.toString().padStart(2, '0') + ':' + sec.toString().padStart(2, '0');
+      const timerEl = document.getElementById('examTimer');
+      if (timeLeft <= 120) {
+        timerEl.classList.add('warning');
+      } else {
+        timerEl.classList.remove('warning');
+      }
+    }
+
+    function switchTab(tabIdx) {
+      const tabs = document.querySelectorAll('.exam-tab');
+      tabs.forEach((t, i) => t.classList.toggle('active', i === tabIdx));
+      currentIndex = tabIdx * 10;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = currentQuestions[currentIndex];
+      document.getElementById('examQNum').textContent = currentIndex + 1;
+      document.getElementById('examQText').textContent = q.text;
+      document.getElementById('examTranslation').style.display = 'none';
+      currentTranslationLang = null;
+
+      const imgEl = document.getElementById('examImage');
+      const placeholder = document.getElementById('examImagePlaceholder');
+      if (q.image) {
+        imgEl.src = q.image;
+        imgEl.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        imgEl.style.display = 'none';
+        placeholder.style.display = 'block';
+      }
+
+      document.getElementById('examBtnVero').classList.toggle('selected', userAnswers[q.index] === true);
+      document.getElementById('examBtnFalso').classList.toggle('selected', userAnswers[q.index] === false);
+      document.getElementById('examPrevBtn').disabled = currentIndex === 0;
+      document.getElementById('examNextBtn').disabled = currentIndex === totalQuestionsInQuiz - 1;
+
+      const answeredCount = Object.keys(userAnswers).length;
+      document.getElementById('examCorreggiBtn').disabled = answeredCount < 1;
+
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const grids = [document.getElementById('examGrid'), document.getElementById('examFullGrid')];
+      grids.forEach(grid => {
+        if (!grid) return;
+        grid.innerHTML = currentQuestions.map((q, i) => {
+          let cls = '';
+          if (i === currentIndex) cls = 'current';
+          else if (userAnswers[q.index] !== undefined) {
+            if (quizSubmitted) {
+              cls = userAnswers[q.index] === q.answer ? 'correct' : 'wrong';
+            } else {
+              cls = 'answered';
+            }
+          } else if (quizSubmitted) {
+            cls = 'wrong';
+          }
+          return '<div class="exam-dot ' + cls + '" onclick="goToQuestion(' + i + ')">' + (i + 1) + '</div>';
+        }).join('');
+      });
+    }
+
+    function selectAnswer(answer) {
+      if (quizSubmitted) return;
+      const q = currentQuestions[currentIndex];
+      userAnswers[q.index] = answer;
+      renderQuestion();
+    }
+
+    function goToQuestion(idx) {
+      currentIndex = idx;
+      renderQuestion();
+    }
+
+    function examPrev() {
+      if (currentIndex > 0) { currentIndex--; renderQuestion(); }
+    }
+
+    function examNext() {
+      if (currentIndex < totalQuestionsInQuiz - 1) { currentIndex++; renderQuestion(); }
+    }
+
+    function toggleFullGrid() {
+      const fullGrid = document.getElementById('examFullGrid');
+      fullGrid.style.display = fullGrid.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function correggi() {
+      if (quizSubmitted) return;
+
+      const answeredCount = Object.keys(userAnswers).length;
+      if (answeredCount < totalQuestionsInQuiz) {
+        const unanswered = totalQuestionsInQuiz - answeredCount;
+        if (!confirm('Hai ' + unanswered + ' domand' + (unanswered === 1 ? 'a' : 'e') + ' senza risposta. Le domande senza risposta saranno segnate come sbagliate. Continuare?')) {
+          return;
+        }
+      }
+
+      quizSubmitted = true;
+      clearInterval(timerInterval);
+
+      let score = 0;
+      const review = currentQuestions.map((q, i) => {
+        const userAns = userAnswers[q.index];
+        const isCorrect = userAns === q.answer;
+        if (isCorrect) score++;
+        return { text: q.text, correct: q.answer, userAnswer: userAns, isCorrect, num: i + 1 };
+      });
+
+      const total = totalQuestionsInQuiz;
+      const wrong = total - score;
+      const passed = wrong <= 3;
+      const percent = Math.round(score / total * 100);
+
+      document.getElementById('examResultNum').textContent = score;
+      document.getElementById('examResultLabel').textContent = '/ ' + total;
+      const scoreEl = document.getElementById('examResultScore');
+      scoreEl.className = 'exam-results-score ' + (passed ? 'pass' : 'fail');
+      document.getElementById('examResultTitle').textContent = passed ? 'Esame Superato!' : 'Non Superato';
+      document.getElementById('examResultMsg').textContent = passed
+        ? 'Hai sbagliato solo ' + wrong + (wrong === 1 ? ' domanda' : ' domande') + '. Complimenti!'
+        : 'Hai sbagliato ' + wrong + ' domande. Max 3 errori consentiti.';
+      document.getElementById('examResultPercent').textContent = percent + '%';
+
+      document.getElementById('examReviewList').innerHTML = review.map(r => {
+        const ansText = r.userAnswer === true ? 'Vero' : r.userAnswer === false ? 'Falso' : 'Non risposta';
+        const correctText = r.correct ? 'Vero' : 'Falso';
+        const checkIcon = r.isCorrect ? ' <i class="fas fa-check" style="color:#27ae60;"></i>' : ' — Corretta: <strong>' + correctText + '</strong> <i class="fas fa-times" style="color:#e74c3c;"></i>';
+        return '<div class="review-item ' + (r.isCorrect ? 'correct' : 'wrong') + '">' +
+          '<strong>' + r.num + '. ' + r.text + '</strong><br>' +
+          '<span style="font-size:0.85rem;">Risposta: <strong>' + ansText + '</strong>' + checkIcon + '</span>' +
+        '</div>';
+      }).join('');
+
+      document.getElementById('examResultsOverlay').classList.add('active');
+      renderGrid();
+    }
+
+    function closeResults() {
+      document.getElementById('examResultsOverlay').classList.remove('active');
+    }
+
+    function retryQuiz() {
+      closeResults();
+      startQuiz(currentQuizId);
+    }
+
+    const translationCache = {};
+    let currentTranslationLang = null;
+
+    async function translateQuestion(lang) {
+      const q = currentQuestions[currentIndex];
+      const cacheKey = q.text + '_' + lang;
+      const el = document.getElementById('examTranslation');
+      el.style.display = 'block';
+      el.className = 'exam-translation exam-translation-loading';
+      el.textContent = 'Translating...';
+      currentTranslationLang = lang;
+
+      if (translationCache[cacheKey]) {
+        el.className = 'exam-translation';
+        el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
+        return;
+      }
+
+      try {
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=it&tl=' + lang + '&dt=t&q=' + encodeURIComponent(q.text);
+        const res = await fetch(url);
+        const data = await res.json();
+        const translated = data[0].map(s => s[0]).join('');
+        translationCache[cacheKey] = translated;
+        el.className = 'exam-translation';
+        el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
+      } catch (err) {
+        el.className = 'exam-translation';
+        el.textContent = 'Translation failed. Please try again.';
+      }
+    }
+
+    function hideTranslation() {
+      document.getElementById('examTranslation').style.display = 'none';
+      currentTranslationLang = null;
+    }
+
+    function readQuestion() {
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in your browser.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const voices = window.speechSynthesis.getVoices();
+      const itVoice = voices.find(v => v.lang.startsWith('it'));
+      const q = currentQuestions[currentIndex];
+      const utter = new SpeechSynthesisUtterance(q.text);
+      utter.lang = 'it-IT';
+      utter.rate = 0.9;
+      if (itVoice) utter.voice = itVoice;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function readTranslation() {
+      if (!currentTranslationLang) return;
+      const q = currentQuestions[currentIndex];
+      const cacheKey = q.text + '_' + currentTranslationLang;
+      const text = translationCache[cacheKey];
+      if (!text) return;
+
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-speech is not supported in your browser.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const voices = window.speechSynthesis.getVoices();
+      const langCode = currentTranslationLang === 'ur' ? 'ur' : 'en';
+      let selectedVoice = null;
+      if (langCode === 'ur') {
+        selectedVoice = voices.find(v => v.lang.startsWith('ur'));
+        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+      } else {
+        selectedVoice = voices.find(v => v.lang.startsWith('en'));
+      }
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = langCode === 'ur' ? 'ur-PK' : 'en-US';
+      utter.rate = 0.85;
+      if (selectedVoice) utter.voice = selectedVoice;
+      window.speechSynthesis.speak(utter);
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadQuizList);
+  </script>
+</body>
+</html>

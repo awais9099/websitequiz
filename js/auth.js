@@ -233,3 +233,39 @@ async function getPatenteQuiz(quizId) {
 async function deletePatenteQuiz(quizId) {
   return firebaseDb.collection('patenteQuizzes').doc(quizId).delete();
 }
+
+// ===== PATENTE QUIZZES TEST COLLECTION =====
+async function createPatenteQuizTest(data) {
+  const ref = await firebaseDb.collection('patenteQuizzesTest').add(data);
+  return ref.id;
+}
+
+async function getAllPatenteQuizzesTest() {
+  const snapshot = await firebaseDb.collection('patenteQuizzesTest').get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getPatenteQuizTest(quizId) {
+  const doc = await firebaseDb.collection('patenteQuizzesTest').doc(quizId).get();
+  return doc.exists ? { id: doc.id, ...doc.data() } : null;
+}
+
+async function deletePatenteQuizTest(quizId) {
+  return firebaseDb.collection('patenteQuizzesTest').doc(quizId).delete();
+}
+
+async function deleteAllPatenteQuizzesTest() {
+  const snapshot = await firebaseDb.collection('patenteQuizzesTest').get();
+  const batch = firebaseDb.batch();
+  snapshot.docs.forEach(doc => batch.delete(doc.ref));
+  return batch.commit();
+}
+
+async function bulkImportPatenteQuizzesTest(quizzes) {
+  const batch = firebaseDb.batch();
+  quizzes.forEach(quiz => {
+    const ref = firebaseDb.collection('patenteQuizzesTest').doc();
+    batch.set(ref, quiz);
+  });
+  return batch.commit();
+}
