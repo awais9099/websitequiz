@@ -123,6 +123,7 @@ const navLoginLink = document.getElementById('navLoginLink');
 const navUserMenu = document.getElementById('navUserMenu');
 const navUserName = document.getElementById('navUserName');
 const navLogoutBtn = document.getElementById('navLogoutBtn');
+const navPatenteQuizLink = document.getElementById('navPatenteQuizLink');
 
 initFirebase().then(() => {
   onAuthStateChanged(async (user) => {
@@ -132,9 +133,31 @@ initFirebase().then(() => {
       navUserName.textContent = displayName || user.email;
       navLoginLink.style.display = 'none';
       navUserMenu.style.display = 'block';
+
+      if (profile && profile.role === 'teacher') {
+        navPatenteQuizLink.style.display = 'block';
+      } else if (profile) {
+        const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
+        let isPatente = false;
+        if (profile.level === 'patente') {
+          isPatente = true;
+        } else {
+          for (const gid of groupIds) {
+            const group = await getGroup(gid);
+            if (group && group.level === 'patente') {
+              isPatente = true;
+              break;
+            }
+          }
+        }
+        navPatenteQuizLink.style.display = isPatente ? 'block' : 'none';
+      } else {
+        navPatenteQuizLink.style.display = 'none';
+      }
     } else {
       navLoginLink.style.display = 'block';
       navUserMenu.style.display = 'none';
+      navPatenteQuizLink.style.display = 'none';
     }
   });
 });
