@@ -283,6 +283,7 @@
       currentQuizId = quizId;
 
       let questions = shuffleArray([...quiz.questions]);
+      questions = questions.slice(0, 30);
       totalQuestionsInQuiz = questions.length;
 
       currentQuestions = questions.map((q, i) => ({ ...q, index: i }));
@@ -294,6 +295,7 @@
         window.speechSynthesis.getVoices();
       }
 
+      updateTabs();
       showStep('quiz');
       renderQuestion();
       startTimer();
@@ -323,6 +325,18 @@
       } else {
         timerEl.classList.remove('warning');
       }
+    }
+
+    function updateTabs() {
+      const tabsContainer = document.getElementById('examTabs');
+      const tabCount = Math.ceil(totalQuestionsInQuiz / 10);
+      let html = '';
+      for (let i = 0; i < tabCount; i++) {
+        const start = i * 10 + 1;
+        const end = Math.min((i + 1) * 10, totalQuestionsInQuiz);
+        html += '<button class="exam-tab' + (i === 0 ? ' active' : '') + '" onclick="switchTab(' + i + ')">Domande ' + start + '-' + end + '</button>';
+      }
+      tabsContainer.innerHTML = html;
     }
 
     function switchTab(tabIdx) {
