@@ -1053,7 +1053,7 @@ async function importOpenSourceQuizzes() {
           blockNumber: mapping.blockNumber,
           questions,
           totalQuestions: questions.length,
-          source: 'open-source',
+          source: 'github',
           createdAt: new Date().toISOString()
         });
         totalQ += questions.length;
