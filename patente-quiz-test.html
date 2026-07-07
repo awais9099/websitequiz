@@ -155,14 +155,13 @@
           <div class="exam-question-number" id="examQNum">1</div>
           <div class="exam-question-text" id="examQText"></div>
           <div class="exam-translate-bar">
-            <button class="exam-translate-btn" onclick="speakItalian()"><i class="fas fa-volume-up"></i> Listen</button>
+            <button class="exam-translate-btn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
             <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
             <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
             <button class="exam-translate-btn" onclick="translateQuestion('pa')"><i class="fas fa-globe"></i> Punjabi</button>
             <button class="exam-translate-btn" onclick="hideTranslation()"><i class="fas fa-times"></i> Hide</button>
           </div>
           <div class="exam-translation" id="examTranslation" style="display:none;"></div>
-          <audio id="ttsAudio" style="display:none;"></audio>
         </div>
       </div>
 
@@ -497,7 +496,7 @@
 
       if (translationCache[cacheKey]) {
         el.className = 'exam-translation';
-        el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="speakTranslation(translationCache[\'' + cacheKey + '\'], \'' + lang + '\')"><i class="fas fa-volume-up"></i> Listen</button>';
+        el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
         return;
       }
 
@@ -508,7 +507,7 @@
         const translated = data[0].map(s => s[0]).join('');
         translationCache[cacheKey] = translated;
         el.className = 'exam-translation';
-        el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="speakTranslation(translationCache[\'' + cacheKey + '\'], \'' + lang + '\')"><i class="fas fa-volume-up"></i> Listen</button>';
+        el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
       } catch (err) {
         el.className = 'exam-translation';
         el.textContent = 'Translation failed. Please try again.';
@@ -518,33 +517,6 @@
     function hideTranslation() {
       document.getElementById('examTranslation').style.display = 'none';
       currentTranslationLang = null;
-    }
-
-    const USE_GOOGLE_TTS = true;
-
-    function playGoogleTTS(text, lang) {
-      const audio = document.getElementById('ttsAudio');
-      const encoded = encodeURIComponent(text);
-      audio.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=' + lang + '&client=tw-ob&q=' + encoded;
-      audio.play().catch(() => {});
-    }
-
-    function speakItalian() {
-      const q = currentQuestions[currentIndex];
-      if (USE_GOOGLE_TTS) {
-        playGoogleTTS(q.text, 'it');
-      } else {
-        readQuestion();
-      }
-    }
-
-    function speakTranslation(text, lang) {
-      if (USE_GOOGLE_TTS) {
-        const langMap = { en: 'en', ur: 'ur', pa: 'pa' };
-        playGoogleTTS(text, langMap[lang] || 'en');
-      } else {
-        readTranslation();
-      }
     }
 
     function readQuestion() {
