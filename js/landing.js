@@ -124,6 +124,7 @@ const navUserMenu = document.getElementById('navUserMenu');
 const navUserName = document.getElementById('navUserName');
 const navLogoutBtn = document.getElementById('navLogoutBtn');
 const navPatenteQuizLink = document.getElementById('navPatenteQuizLink');
+const navQuizToolLink = document.getElementById('navQuizToolLink');
 
 initFirebase().then(() => {
   onAuthStateChanged(async (user) => {
@@ -133,6 +134,7 @@ initFirebase().then(() => {
       navUserName.textContent = displayName || user.email;
       navLoginLink.style.display = 'none';
       navUserMenu.style.display = 'block';
+      navQuizToolLink.style.display = 'block';
 
       if (profile && profile.role === 'teacher') {
         navPatenteQuizLink.style.display = 'block';
@@ -158,6 +160,7 @@ initFirebase().then(() => {
       navLoginLink.style.display = 'block';
       navUserMenu.style.display = 'none';
       navPatenteQuizLink.style.display = 'none';
+      navQuizToolLink.style.display = 'none';
     }
   });
 });
