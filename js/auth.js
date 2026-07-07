@@ -43,6 +43,88 @@ function onAuthStateChanged(callback) {
   }
 }
 
+// ===== SECURITY HELPERS =====
+function sanitizeInput(str) {
+  if (typeof str !== 'string') return str;
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function sanitizeObject(obj) {
+  const clean = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      clean[key] = sanitizeInput(value);
+    } else if (Array.isArray(value)) {
+      clean[key] = value.map(v => typeof v === 'string' ? sanitizeInput(v) : v);
+    } else {
+      clean[key] = value;
+    }
+  }
+  return clean;
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePhone(phone) {
+  if (!phone) return true;
+  return /^[\d\s\+\-\(\)]{7,20}$/.test(phone);
+}
+
+function validateName(name) {
+  return name && name.length >= 2 && name.length <= 100;
+}
+
+function validateUrl(url) {
+  if (!url) return true;
+  try { new URL(url); return true; } catch { return false; }
+}
+
+function validateDate(date) {
+  if (!date) return true;
+  return !isNaN(Date.parse(date));
+}
+
+let cachedTeacherStatus = null;
+let teacherStatusTime = 0;
+
+async function isTeacher() {
+  const now = Date.now();
+  if (cachedTeacherStatus !== null && now - teacherStatusTime < 300000) {
+    return cachedTeacherStatus;
+  }
+  const user = getCurrentUser();
+  if (!user) { cachedTeacherStatus = false; return false; }
+  try {
+    const profile = await getStudentProfile(user.uid);
+    cachedTeacherStatus = profile && profile.role === 'teacher';
+    teacherStatusTime = now;
+    return cachedTeacherStatus;
+  } catch {
+    return false;
+  }
+}
+
+async function requireTeacher() {
+  const teacher = await isTeacher();
+  if (!teacher) throw new Error('Unauthorized: Teacher access required');
+  return true;
+}
+
+function checkRateLimit(key, maxAttempts, windowMs) {
+  const now = Date.now();
+  const storageKey = 'rateLimit_' + key;
+  let attempts = JSON.parse(localStorage.getItem(storageKey) || '[]');
+  attempts = attempts.filter(t => now - t < windowMs);
+  if (attempts.length >= maxAttempts) return false;
+  attempts.push(now);
+  localStorage.setItem(storageKey, JSON.stringify(attempts));
+  return true;
+}
+
 async function signUpWithEmail(email, password) {
   return firebaseAuth.createUserWithEmailAndPassword(email, password);
 }
@@ -299,7 +381,12 @@ async function deleteCourseCard(cardId) {
 
 // ===== IMAGE UPLOAD =====
 async function uploadCourseCardImage(file) {
-  const fileName = 'course-cards/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) throw new Error('Image must be less than 5MB');
+  if (!file.type.startsWith('image/')) throw new Error('File must be an image');
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) throw new Error('Only JPEG, PNG, GIF, WebP allowed');
+  const fileName = 'course-cards/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.]/g, '_').substring(0, 50);
   const ref = firebaseStorage.ref(fileName);
   await ref.put(file);
   return ref.getDownloadURL();

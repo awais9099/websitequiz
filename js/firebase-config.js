@@ -1,3 +1,7 @@
+if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+  location.replace('https:' + location.href.substring(location.protocol.length));
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyDYJUsJLWkSjHZuiKJ23XMyy7zNqDI5JPc",
   authDomain: "learn-italian-iqra.firebaseapp.com",

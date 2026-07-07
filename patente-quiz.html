@@ -272,6 +272,11 @@
     }
 
     function startQuiz(quizId) {
+      const rateKey = 'patenteQuiz_' + quizId;
+      if (!checkRateLimit(rateKey, 10, 60000)) {
+        alert('Too many attempts. Please wait a minute before trying again.');
+        return;
+      }
       const quiz = allQuizzes.find(q => q.id === quizId);
       if (!quiz) return;
       currentQuizId = quizId;

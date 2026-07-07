@@ -220,7 +220,13 @@ async function saveStudent() {
   const isActive = document.getElementById('sActive').value === 'true';
   const expiryDate = document.getElementById('sExpiry').value || null;
 
-  if (!name) { showToast('Enter a name', 'error'); return; }
+  if (!validateName(name)) { showToast('Name must be 2-100 characters', 'error'); return; }
+  if (email && !validateEmail(email)) { showToast('Invalid email format', 'error'); return; }
+  if (!validatePhone(phone)) { showToast('Invalid phone format', 'error'); return; }
+  if (expiryDate && !validateDate(expiryDate)) { showToast('Invalid date', 'error'); return; }
+
+  const cleanName = sanitizeInput(name);
+  const cleanPhone = sanitizeInput(phone);
 
   let level = '';
   if (groupIds.length > 0) {
@@ -229,7 +235,7 @@ async function saveStudent() {
   }
 
   if (editingStudentUid) {
-    const updateData = { name, phone, level, groupIds, isActive, expiryDate };
+    const updateData = { name: cleanName, phone: cleanPhone, level, groupIds, isActive, expiryDate };
     await updateStudentProfile(editingStudentUid, updateData);
     showToast('Student updated');
   } else {
@@ -237,7 +243,7 @@ async function saveStudent() {
     try {
       const docId = 'pending_' + email.replace(/[@.]/g, '_');
       await createStudentProfile(docId, {
-        name, email, phone, level, groupIds, isActive, expiryDate,
+        name: cleanName, email: sanitizeInput(email), phone: cleanPhone, level, groupIds, isActive, expiryDate,
         role: 'student',
         isPending: true,
         createdAt: new Date().toISOString()
@@ -461,12 +467,13 @@ async function editGroup(groupId) {
 async function saveGroup() {
   const name = document.getElementById('gName').value.trim();
   const level = document.getElementById('gLevel').value;
-  if (!name) { showToast('Enter a group name', 'error'); return; }
+  if (!validateName(name)) { showToast('Group name must be 2-100 characters', 'error'); return; }
+  const cleanName = sanitizeInput(name);
   if (editingGroupId) {
-    await updateGroup(editingGroupId, { name, level });
+    await updateGroup(editingGroupId, { name: cleanName, level });
     showToast('Group updated');
   } else {
-    await createGroup({ name, level, createdAt: new Date().toISOString() });
+    await createGroup({ name: cleanName, level, createdAt: new Date().toISOString() });
     showToast('Group created');
   }
   closeGroupModal();
@@ -511,12 +518,13 @@ async function editSection(sectionId, groupId) {
 async function saveSection() {
   const title = document.getElementById('secTitle').value.trim();
   const order = parseInt(document.getElementById('secOrder').value) || 1;
-  if (!title) { showToast('Enter a section title', 'error'); return; }
+  if (!validateName(title)) { showToast('Section title must be 2-100 characters', 'error'); return; }
+  const cleanTitle = sanitizeInput(title);
   if (editingSectionId) {
-    await updateSection(editingSectionId, { title, order });
+    await updateSection(editingSectionId, { title: cleanTitle, order });
     showToast('Section updated');
   } else {
-    await createSection({ groupId: currentGroupId, title, order, createdAt: new Date().toISOString() });
+    await createSection({ groupId: currentGroupId, title: cleanTitle, order, createdAt: new Date().toISOString() });
     showToast('Section added');
   }
   closeSectionModal();
@@ -573,9 +581,21 @@ async function saveVideo() {
   const url = document.getElementById('vUrl').value.trim();
   const thumbnail = document.getElementById('vThumbnail').value.trim();
   const notesUrl = document.getElementById('vNotesUrl').value.trim();
-  if (!title) { showToast('Enter a video title', 'error'); return; }
+  if (!validateName(title)) { showToast('Video title must be 2-100 characters', 'error'); return; }
   if (!url) { showToast('Enter a video URL', 'error'); return; }
-  const data = { title, topics, description, url, thumbnail, notesUrl, sectionId: editingSectionId, groupId: currentGroupId };
+  if (!validateUrl(url)) { showToast('Invalid video URL', 'error'); return; }
+  if (thumbnail && !validateUrl(thumbnail)) { showToast('Invalid thumbnail URL', 'error'); return; }
+  if (notesUrl && !validateUrl(notesUrl)) { showToast('Invalid notes URL', 'error'); return; }
+  const data = {
+    title: sanitizeInput(title),
+    topics: sanitizeInput(topics),
+    description: sanitizeInput(description),
+    url: sanitizeInput(url),
+    thumbnail: sanitizeInput(thumbnail),
+    notesUrl: sanitizeInput(notesUrl),
+    sectionId: editingSectionId,
+    groupId: currentGroupId
+  };
   if (editingVideoId) {
     await updateVideo(editingVideoId, data);
     showToast('Video updated');
@@ -662,7 +682,13 @@ function saveQuestion() {
   if (!text) { showToast('Enter a question', 'error'); return; }
   if (opts.some(o => !o)) { showToast('Fill all 4 options', 'error'); return; }
   if (!topic) { showToast('Enter a topic', 'error'); return; }
-  const qData = { level, question: text, options: opts, answer: opts[0], topic };
+  const qData = {
+    level,
+    question: sanitizeInput(text),
+    options: opts.map(o => sanitizeInput(o)),
+    answer: sanitizeInput(opts[0]),
+    topic: sanitizeInput(topic)
+  };
   if (editingId) {
     const idx = questions.findIndex(q => q.id === editingId);
     if (idx !== -1) { qData.id = editingId; questions[idx] = qData; }
@@ -800,7 +826,13 @@ async function saveTrick() {
   const imageUrl = document.getElementById('tImageUrl').value.trim();
   if (!word) { showToast('Enter a word', 'error'); return; }
   if (!description) { showToast('Enter a description', 'error'); return; }
-  const data = { word, description, imageUrl, updatedAt: new Date().toISOString() };
+  if (imageUrl && !validateUrl(imageUrl)) { showToast('Invalid image URL', 'error'); return; }
+  const data = {
+    word: sanitizeInput(word),
+    description: sanitizeInput(description),
+    imageUrl: sanitizeInput(imageUrl),
+    updatedAt: new Date().toISOString()
+  };
   if (editingTrickId) {
     await updateTrick(editingTrickId, data);
     showToast('Trick updated');
@@ -1237,12 +1269,13 @@ function removeCourseCardImage() {
 
 async function saveCourseCard() {
   const title = document.getElementById('ccTitle').value.trim();
-  if (!title) { showToast('Enter a course title', 'error'); return; }
+  if (!validateName(title)) { showToast('Title must be 2-100 characters', 'error'); return; }
   const description = document.getElementById('ccDescription').value.trim();
   const startDate = document.getElementById('ccStartDate').value;
   const schedule = document.getElementById('ccSchedule').value.trim();
   const price = document.getElementById('ccPrice').value.trim();
   const isActive = document.getElementById('ccActive').value === 'true';
+  if (startDate && !validateDate(startDate)) { showToast('Invalid date', 'error'); return; }
 
   const saveBtn = document.getElementById('saveCourseCardBtn');
   saveBtn.disabled = true;
@@ -1256,7 +1289,15 @@ async function saveCourseCard() {
       imageUrl = await uploadCourseCardImage(ccSelectedFile);
     }
 
-    const data = { title, description, startDate, schedule, price, imageUrl, isActive };
+    const data = {
+      title: sanitizeInput(title),
+      description: sanitizeInput(description),
+      startDate,
+      schedule: sanitizeInput(schedule),
+      price: sanitizeInput(price),
+      imageUrl,
+      isActive
+    };
 
     if (editingCourseCardId) {
       await updateCourseCard(editingCourseCardId, data);
