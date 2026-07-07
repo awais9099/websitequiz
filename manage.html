@@ -581,21 +581,6 @@ DOMANDE FALSE
         <input type="text" id="ccPrice" placeholder="e.g. €120/month">
       </div>
       <div class="form-group">
-        <label>Course Image (optional)</label>
-        <div style="border:2px dashed var(--border);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;position:relative;" id="ccImageUploadArea">
-          <input type="file" id="ccImageFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
-          <i class="fas fa-cloud-upload-alt" style="font-size:1.5rem;color:var(--primary);margin-bottom:0.5rem;display:block;"></i>
-          <p style="font-size:0.85rem;color:var(--text-light);margin:0;">Click to upload image</p>
-          <p style="font-size:0.75rem;color:var(--text-light);margin:0.25rem 0 0;">Leave empty for info card</p>
-        </div>
-        <div id="ccImagePreview" style="display:none;margin-top:0.75rem;position:relative;">
-          <img id="ccPreviewImg" style="max-width:100%;max-height:200px;border-radius:var(--radius-sm);object-fit:contain;">
-          <button class="btn btn-sm" style="position:absolute;top:4px;right:4px;background:#e74c3c;color:white;border-radius:50%;width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;" onclick="removeCourseCardImage()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      <div class="form-group">
         <label for="ccActive">Status</label>
         <select id="ccActive">
           <option value="true">Active (show on landing page)</option>

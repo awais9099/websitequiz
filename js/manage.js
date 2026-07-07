@@ -1165,8 +1165,6 @@ async function clearAllTestQuizzesConfirm() {
 // ===== COURSE CARDS =====
 let allCourseCards = [];
 let editingCourseCardId = null;
-let ccSelectedFile = null;
-let ccCurrentImageUrl = null;
 
 async function loadCourseCards() {
   try {
@@ -1187,12 +1185,8 @@ function renderCourseCards() {
   }
   noCards.style.display = 'none';
   container.innerHTML = allCourseCards.map(card => {
-    const imageHtml = card.imageUrl
-      ? `<img src="${card.imageUrl}" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--radius-sm);margin-bottom:0.75rem;">`
-      : `<div style="background:var(--primary-light);color:var(--primary);padding:1rem;border-radius:var(--radius-sm);text-align:center;margin-bottom:0.75rem;"><i class="fas fa-info-circle" style="font-size:1.5rem;display:block;margin-bottom:0.3rem;"></i>Info Card</div>`;
     return `
       <div class="quiz-card" style="margin-bottom:1rem;${card.isActive ? '' : 'opacity:0.5;'}">
-        ${imageHtml}
         <div style="display:flex;justify-content:space-between;align-items:start;">
           <div>
             <h3 style="font-size:1rem;margin-bottom:0.25rem;">${card.title}</h3>
@@ -1217,8 +1211,6 @@ function renderCourseCards() {
 
 function openCourseCardModal(card) {
   editingCourseCardId = card ? card.id : null;
-  ccSelectedFile = null;
-  ccCurrentImageUrl = card ? (card.imageUrl || null) : null;
   document.getElementById('courseCardModalTitle').textContent = card ? 'Edit Course Card' : 'Add Course Card';
   document.getElementById('ccTitle').value = card ? card.title : '';
   document.getElementById('ccDescription').value = card ? (card.description || '') : '';
@@ -1226,45 +1218,12 @@ function openCourseCardModal(card) {
   document.getElementById('ccSchedule').value = card ? (card.schedule || '') : '';
   document.getElementById('ccPrice').value = card ? (card.price || '') : '';
   document.getElementById('ccActive').value = card ? (card.isActive ? 'true' : 'false') : 'true';
-  const preview = document.getElementById('ccImagePreview');
-  const uploadArea = document.getElementById('ccImageUploadArea');
-  if (card && card.imageUrl) {
-    document.getElementById('ccPreviewImg').src = card.imageUrl;
-    preview.style.display = 'block';
-    uploadArea.style.display = 'none';
-  } else {
-    preview.style.display = 'none';
-    uploadArea.style.display = 'block';
-  }
   document.getElementById('courseCardModal').classList.add('active');
 }
 
 function closeCourseCardModal() {
   document.getElementById('courseCardModal').classList.remove('active');
   editingCourseCardId = null;
-  ccSelectedFile = null;
-  ccCurrentImageUrl = null;
-}
-
-document.getElementById('ccImageFile').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  ccSelectedFile = file;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    document.getElementById('ccPreviewImg').src = ev.target.result;
-    document.getElementById('ccImagePreview').style.display = 'block';
-    document.getElementById('ccImageUploadArea').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-});
-
-function removeCourseCardImage() {
-  ccSelectedFile = null;
-  ccCurrentImageUrl = null;
-  document.getElementById('ccImagePreview').style.display = 'none';
-  document.getElementById('ccImageUploadArea').style.display = 'block';
-  document.getElementById('ccImageFile').value = '';
 }
 
 async function saveCourseCard() {
@@ -1282,20 +1241,12 @@ async function saveCourseCard() {
   saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
   try {
-    let imageUrl = ccCurrentImageUrl;
-
-    if (ccSelectedFile) {
-      if (ccCurrentImageUrl) await deleteCourseCardImage(ccCurrentImageUrl);
-      imageUrl = await uploadCourseCardImage(ccSelectedFile);
-    }
-
     const data = {
       title: sanitizeInput(title),
       description: sanitizeInput(description),
       startDate,
       schedule: sanitizeInput(schedule),
       price: sanitizeInput(price),
-      imageUrl,
       isActive
     };
 
@@ -1335,8 +1286,6 @@ async function toggleCourseCardActive(cardId, newActive) {
 async function deleteCourseCardConfirm(cardId) {
   if (!confirm('Delete this course card? This cannot be undone.')) return;
   try {
-    const card = allCourseCards.find(c => c.id === cardId);
-    if (card && card.imageUrl) await deleteCourseCardImage(card.imageUrl);
     await deleteCourseCard(cardId);
     showToast('Course card deleted');
     loadCourseCards();

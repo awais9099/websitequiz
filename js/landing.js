@@ -217,29 +217,22 @@ async function loadCourseCards() {
     document.getElementById('upcoming-courses').style.display = 'block';
     const container = document.getElementById('courseCardsContainer');
     container.innerHTML = cards.map(card => {
-      if (card.imageUrl) {
-        return `
-          <a href="https://wa.me/393517080455?text=Hi!%20I'm%20interested%20in%20the%20${encodeURIComponent(card.title)}%20course" target="_blank" style="text-decoration:none;display:block;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.2s;max-height:150px;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='none'">
-            <img src="${card.imageUrl}" alt="${card.title}" style="width:100%;height:150px;object-fit:cover;display:block;">
-          </a>
-        `;
-      } else {
-        return `
-          <div style="background:white;border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
-            <div style="flex:1;min-width:200px;">
-              <h3 style="color:var(--primary);margin:0 0 0.25rem;font-size:1rem;">${card.title}</h3>
-              <div style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.8rem;color:var(--text-light);">
-                ${card.startDate ? `<span><i class="fas fa-calendar"></i> ${card.startDate}</span>` : ''}
-                ${card.schedule ? `<span><i class="fas fa-clock"></i> ${card.schedule}</span>` : ''}
-                ${card.price ? `<span style="font-weight:700;color:var(--primary);"><i class="fas fa-tag"></i> ${card.price}</span>` : ''}
-              </div>
+      return `
+        <div style="background:white;border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <h3 style="color:var(--primary);margin:0 0 0.25rem;font-size:1rem;">${card.title}</h3>
+            ${card.description ? `<p style="font-size:0.8rem;color:var(--text-light);margin:0 0 0.25rem;">${card.description}</p>` : ''}
+            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;font-size:0.8rem;color:var(--text-light);">
+              ${card.startDate ? `<span><i class="fas fa-calendar"></i> ${card.startDate}</span>` : ''}
+              ${card.schedule ? `<span><i class="fas fa-clock"></i> ${card.schedule}</span>` : ''}
+              ${card.price ? `<span style="font-weight:700;color:var(--primary);"><i class="fas fa-tag"></i> ${card.price}</span>` : ''}
             </div>
-            <a href="https://wa.me/393517080455?text=Hi!%20I'm%20interested%20in%20the%20${encodeURIComponent(card.title)}%20course" target="_blank" class="btn btn-sm" style="background:#25d366;color:white;white-space:nowrap;">
-              <i class="fab fa-whatsapp"></i> Enroll
-            </a>
           </div>
-        `;
-      }
+          <a href="https://wa.me/393517080455?text=Hi!%20I'm%20interested%20in%20the%20${encodeURIComponent(card.title)}%20course" target="_blank" class="btn btn-sm" style="background:#25d366;color:white;white-space:nowrap;">
+            <i class="fab fa-whatsapp"></i> Enroll
+          </a>
+        </div>
+      `;
     }).join('');
   } catch (err) {
     console.warn('Could not load course cards:', err);
