@@ -809,6 +809,30 @@ a {
   border-color: white;
 }
 
+.student-filter {
+  background: var(--bg-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.student-filter:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.student-filter.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 .videos-page-content {
   padding: 2rem 1.5rem;
 }

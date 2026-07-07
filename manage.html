@@ -80,7 +80,19 @@
           <i class="fas fa-user-plus"></i> Add Student
         </button>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.5rem;">Create and manage student accounts. Only active students can access video lessons.</p>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Create and manage student accounts. Only active students can access video lessons.</p>
+
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <button class="btn btn-sm student-filter active" onclick="filterStudents('all', this)">All</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('A2', this)">A2</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('B1', this)">B1</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('patente', this)">Patente</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('A2+B1', this)">A2 + B1</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('A2+patente', this)">A2 + Patente</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('B1+patente', this)">B1 + Patente</button>
+        <button class="btn btn-sm student-filter" onclick="filterStudents('all-courses', this)">All Courses</button>
+      </div>
+
       <div class="data-table-wrapper">
         <table class="data-table">
           <thead>

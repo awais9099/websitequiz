@@ -6,6 +6,7 @@ let editingSectionId = null;
 let editingVideoId = null;
 let currentGroupId = null;
 let allGroups = [];
+let allStudents = [];
 let isTeacher = false;
 
 // ===== AUTH CHECK =====
@@ -54,48 +55,78 @@ TABS.forEach(tab => {
 });
 
 // ===== STUDENTS =====
+let currentStudentFilter = 'all';
+
+function filterStudents(filter, btn) {
+  currentStudentFilter = filter;
+  document.querySelectorAll('.student-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFilteredStudents();
+}
+
+function renderFilteredStudents() {
+  const tbody = document.getElementById('studentsBody');
+  const noStudents = document.getElementById('noStudents');
+  const students = allStudents.filter(s => s.role !== 'teacher');
+
+  const filtered = students.filter(s => {
+    const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+    const groups = groupIds.map(gid => allGroups.find(gr => gr.id === gid)).filter(Boolean);
+    const levels = [...new Set(groups.map(g => g.level))].filter(Boolean);
+
+    if (currentStudentFilter === 'all') return true;
+    if (currentStudentFilter === 'all-courses') return levels.length >= 2;
+    if (currentStudentFilter.includes('+')) {
+      const required = currentStudentFilter.split('+');
+      return required.every(r => levels.includes(r));
+    }
+    return levels.includes(currentStudentFilter);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    noStudents.style.display = 'block';
+    return;
+  }
+  noStudents.style.display = 'none';
+  tbody.innerHTML = filtered.map(s => {
+    const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+    const groups = groupIds.map(gid => allGroups.find(gr => gr.id === gid)).filter(Boolean);
+    const groupNames = groups.map(g => g.name);
+    const levels = [...new Set(groups.map(g => g.level))].filter(Boolean);
+    return `
+    <tr>
+      <td><strong>${s.name || 'N/A'}</strong></td>
+      <td>${s.email || 'N/A'}</td>
+      <td>${s.phone || 'N/A'}</td>
+      <td>${levels.length > 0 ? levels.map(l => `<span class="course-badge badge-${l === 'patente' ? 'patente' : l.toLowerCase()}">${l}</span>`).join(' ') : '<span style="color:var(--text-light);">Not set</span>'}</td>
+      <td>${groupNames.length > 0 ? groupNames.map(n => `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);display:block;">${n}</span>`).join('') : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
+      <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
+      <td class="actions">
+        <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-sm" style="background:${s.isActive ? 'var(--warning)' : 'var(--accent)'};color:white;" onclick="toggleStudentActive('${s.uid}', ${!s.isActive})">
+          <i class="fas fa-${s.isActive ? 'ban' : 'check'}"></i>
+        </button>
+        <button class="btn btn-sm" style="background:var(--primary-light);color:white;" onclick="resetStudentPassword('${s.email}')" title="Send password reset email">
+          <i class="fas fa-key"></i>
+        </button>
+        <button class="btn btn-sm" style="background:#8e44ad;color:white;" onclick="viewAsStudent('${s.uid}')" title="View as student">
+          <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 async function loadStudents() {
   const tbody = document.getElementById('studentsBody');
   const noStudents = document.getElementById('noStudents');
   try {
     allGroups = await getGroups();
     populateGroupCheckboxes();
-    const students = await getAllStudents();
-    const studentList = students.filter(s => s.role !== 'teacher');
-    if (studentList.length === 0) {
-      tbody.innerHTML = '';
-      noStudents.style.display = 'block';
-      return;
-    }
-    noStudents.style.display = 'none';
-    tbody.innerHTML = studentList.map(s => {
-      const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
-      const groups = groupIds.map(gid => allGroups.find(gr => gr.id === gid)).filter(Boolean);
-      const groupNames = groups.map(g => g.name);
-      const levels = [...new Set(groups.map(g => g.level))].filter(Boolean);
-      return `
-      <tr>
-        <td><strong>${s.name || 'N/A'}</strong></td>
-        <td>${s.email || 'N/A'}</td>
-        <td>${s.phone || 'N/A'}</td>
-        <td>${levels.length > 0 ? levels.map(l => `<span class="course-badge badge-${l === 'patente' ? 'patente' : l.toLowerCase()}">${l}</span>`).join(' ') : '<span style="color:var(--text-light);">Not set</span>'}</td>
-        <td>${groupNames.length > 0 ? groupNames.map(n => `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);display:block;">${n}</span>`).join('') : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
-        <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
-        <td class="actions">
-          <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-sm" style="background:${s.isActive ? 'var(--warning)' : 'var(--accent)'};color:white;" onclick="toggleStudentActive('${s.uid}', ${!s.isActive})">
-            <i class="fas fa-${s.isActive ? 'ban' : 'check'}"></i>
-          </button>
-          <button class="btn btn-sm" style="background:var(--primary-light);color:white;" onclick="resetStudentPassword('${s.email}')" title="Send password reset email">
-            <i class="fas fa-key"></i>
-          </button>
-          <button class="btn btn-sm" style="background:#8e44ad;color:white;" onclick="viewAsStudent('${s.uid}')" title="View as student">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.uid}')"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+    allStudents = await getAllStudents();
+    renderFilteredStudents();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);padding:2rem;">Error loading students: ${err.message}</td></tr>`;
   }
@@ -292,6 +323,7 @@ async function loadGroups() {
             <div class="group-actions">
               <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();openSectionModal('${group.id}')"><i class="fas fa-plus"></i> Section</button>
               <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editGroup('${group.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-xs" style="background:#e67e22;color:white;" onclick="event.stopPropagation();deactivateGroup('${group.id}')" title="Deactivate all students in this group"><i class="fas fa-user-slash"></i> Deactivate</button>
               <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteGroupConfirm('${group.id}')"><i class="fas fa-trash"></i></button>
               <i class="fas fa-chevron-down" style="color:var(--text-light);transition:transform 0.3s;"></i>
             </div>
@@ -316,6 +348,29 @@ function toggleGroupBody(header) {
   } else {
     body.style.display = 'none';
     if (icon) icon.style.transform = '';
+  }
+}
+
+async function deactivateGroup(groupId) {
+  const group = allGroups.find(g => g.id === groupId);
+  if (!group) return;
+  if (!confirm('Deactivate ALL students in "' + group.name + '"? They won\'t be able to access videos.')) return;
+
+  try {
+    const students = await getAllStudents();
+    const groupStudents = students.filter(s => {
+      const groupIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+      return groupIds.includes(groupId);
+    });
+
+    for (const student of groupStudents) {
+      await updateStudentProfile(student.uid, { isActive: false });
+    }
+
+    showToast(groupStudents.length + ' students deactivated in ' + group.name, 'success');
+    loadStudents();
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
   }
 }
 
