@@ -595,7 +595,7 @@
         alert('Text-to-speech is not supported in your browser.');
         return;
       }
-      window.speechSynthesis.cancel();
+
       const voices = window.speechSynthesis.getVoices();
       const langCode = currentTranslationLang;
       let selectedVoice = null;
@@ -613,12 +613,12 @@
       }
 
       if (!selectedVoice) {
-        alert('Voice not available for this language on your device. Try English instead.');
-        hideStopButton();
+        alert('Voice not available for ' + (langCode === 'ur' ? 'Urdu' : langCode === 'pa' ? 'Punjabi' : 'English') + ' on your device.');
         return;
       }
 
-      if (btn) showStopOnButton(btn);
+      window.speechSynthesis.cancel();
+      showStopOnButton(btn);
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = utterLang;
       utter.rate = 0.85;
