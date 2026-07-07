@@ -74,6 +74,26 @@
     </div>
   </div>
 
+  <!-- EXPIRED -->
+  <div class="auth-page auth-page-nav" id="expired" style="display:none;">
+    <div class="auth-container">
+      <div class="auth-card" style="text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#e74c3c,#c0392b);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+          <i class="fas fa-times-circle" style="font-size:1.5rem;color:white;"></i>
+        </div>
+        <h1 style="font-size:1.4rem;margin-bottom:0.3rem;">Course Expired</h1>
+        <p id="expiredNameDisplay" style="color:var(--primary);font-weight:600;margin-bottom:0.5rem;font-size:0.95rem;"></p>
+        <p style="color:var(--text-light);margin-bottom:1rem;">Your course access has expired. Please contact the teacher to renew your subscription.</p>
+        <a href="https://wa.me/393517080455" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:0.75rem;background:#25d366;">
+          <i class="fab fa-whatsapp"></i> Contact on WhatsApp
+        </a>
+        <button class="btn btn-outline" id="expiredLogoutBtn" style="color:var(--text);border-color:var(--border);width:100%;justify-content:center;">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- VIDEOS CONTENT (shown when logged in + active) -->
   <div id="videosContent" style="display:none;">
     <div class="videos-page">

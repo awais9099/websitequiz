@@ -9,6 +9,17 @@ let allGroups = [];
 let allStudents = [];
 let isTeacher = false;
 
+function getExpiryCell(expiryDate) {
+  if (!expiryDate) return '<span style="color:var(--text-light);font-size:0.8rem;">No expiry</span>';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const expiry = new Date(expiryDate + 'T00:00:00');
+  const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return '<span style="color:#e74c3c;font-weight:600;font-size:0.8rem;"><i class="fas fa-times-circle"></i> Expired ' + expiryDate + '</span>';
+  if (diffDays <= 7) return '<span style="color:var(--warning);font-weight:600;font-size:0.8rem;"><i class="fas fa-clock"></i> ' + expiryDate + ' (' + diffDays + ' days left)</span>';
+  return '<span style="color:var(--accent);font-size:0.8rem;"><i class="fas fa-calendar-check"></i> ' + expiryDate + '</span>';
+}
+
 // ===== AUTH CHECK =====
 initFirebase().then(() => {
   onAuthStateChanged(async (user) => {
@@ -101,6 +112,7 @@ function renderFilteredStudents() {
       <td>${s.phone || 'N/A'}</td>
       <td>${levels.length > 0 ? levels.map(l => `<span class="course-badge badge-${l === 'patente' ? 'patente' : l.toLowerCase()}">${l}</span>`).join(' ') : '<span style="color:var(--text-light);">Not set</span>'}</td>
       <td>${groupNames.length > 0 ? groupNames.map(n => `<span style="font-size:0.8rem;font-weight:600;color:var(--primary);display:block;">${n}</span>`).join('') : '<span style="color:var(--text-light);font-size:0.8rem;">No group</span>'}</td>
+      <td>${getExpiryCell(s.expiryDate)}</td>
       <td>${s.isActive ? '<span style="color:var(--accent);font-weight:600;">Active</span>' : '<span style="color:var(--warning);font-weight:600;">Inactive</span>'}</td>
       <td class="actions">
         <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.uid}')"><i class="fas fa-edit"></i></button>
@@ -173,7 +185,7 @@ function openStudentModal(title) {
 function closeStudentModal() {
   document.getElementById('studentModal').classList.remove('active');
   editingStudentUid = null;
-  ['sName','sEmail','sPhone','sActive'].forEach(id => {
+  ['sName','sEmail','sPhone','sActive','sExpiry'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (el.tagName === 'SELECT') el.selectedIndex = 0;
@@ -193,6 +205,7 @@ async function editStudent(uid) {
   document.getElementById('sEmail').disabled = true;
   document.getElementById('sPhone').value = profile.phone || '';
   document.getElementById('sActive').value = profile.isActive ? 'true' : 'false';
+  document.getElementById('sExpiry').value = profile.expiryDate || '';
   const groupIds = profile.groupIds || (profile.groupId ? [profile.groupId] : []);
   setSelectedGroups(groupIds);
   openStudentModal('Edit Student');
@@ -204,6 +217,7 @@ async function saveStudent() {
   const phone = document.getElementById('sPhone').value.trim();
   const groupIds = getSelectedGroupIds();
   const isActive = document.getElementById('sActive').value === 'true';
+  const expiryDate = document.getElementById('sExpiry').value || null;
 
   if (!name) { showToast('Enter a name', 'error'); return; }
 
@@ -214,7 +228,7 @@ async function saveStudent() {
   }
 
   if (editingStudentUid) {
-    const updateData = { name, phone, level, groupIds, isActive };
+    const updateData = { name, phone, level, groupIds, isActive, expiryDate };
     await updateStudentProfile(editingStudentUid, updateData);
     showToast('Student updated');
   } else {
@@ -222,7 +236,7 @@ async function saveStudent() {
     try {
       const docId = 'pending_' + email.replace(/[@.]/g, '_');
       await createStudentProfile(docId, {
-        name, email, phone, level, groupIds, isActive,
+        name, email, phone, level, groupIds, isActive, expiryDate,
         role: 'student',
         isPending: true,
         createdAt: new Date().toISOString()

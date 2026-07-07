@@ -71,7 +71,7 @@ function getEmbedUrl(url) {
 }
 
 function showSection(section) {
-  ['loadingState', 'notLoggedIn', 'notActive', 'videosContent'].forEach(id => {
+  ['loadingState', 'notLoggedIn', 'notActive', 'expired', 'videosContent'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
   const el = document.getElementById(section);
@@ -237,6 +237,7 @@ async function handleLogout() {
 
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 document.getElementById('logoutBtnTop').addEventListener('click', handleLogout);
+document.getElementById('expiredLogoutBtn').addEventListener('click', handleLogout);
 
 // Change Password Modal
 const changePwModal = document.getElementById('changePwModal');
@@ -392,6 +393,19 @@ initFirebase().then(() => {
       document.getElementById('studentCourseTabs').style.display = 'none';
       showSection('notActive');
       return;
+    }
+
+    if (profile.expiryDate) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const expiry = new Date(profile.expiryDate + 'T00:00:00');
+      if (expiry < today) {
+        document.getElementById('expiredNameDisplay').textContent = profile.name || user.email;
+        document.getElementById('videoLevelTabs').style.display = 'none';
+        document.getElementById('studentCourseTabs').style.display = 'none';
+        showSection('expired');
+        return;
+      }
     }
 
     document.getElementById('studentNameDisplay').textContent = profile.name || user.email;
