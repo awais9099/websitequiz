@@ -565,14 +565,20 @@
         return;
       }
       window.speechSynthesis.cancel();
-      showStopOnButton(document.getElementById('readBtn'));
       const voices = window.speechSynthesis.getVoices();
       const itVoice = voices.find(v => v.lang.startsWith('it'));
       const q = currentQuestions[currentIndex];
+
+      if (!itVoice) {
+        alert('Italian voice not available on your device.');
+        return;
+      }
+
+      showStopOnButton(document.getElementById('readBtn'));
       const utter = new SpeechSynthesisUtterance(q.text);
       utter.lang = 'it-IT';
       utter.rate = 0.9;
-      if (itVoice) utter.voice = itVoice;
+      utter.voice = itVoice;
       utter.onend = () => hideStopButton();
       utter.onerror = () => hideStopButton();
       window.speechSynthesis.speak(utter);
@@ -590,24 +596,33 @@
         return;
       }
       window.speechSynthesis.cancel();
-      if (btn) showStopOnButton(btn);
       const voices = window.speechSynthesis.getVoices();
       const langCode = currentTranslationLang;
       let selectedVoice = null;
+      let utterLang = '';
+
       if (langCode === 'ur') {
         selectedVoice = voices.find(v => v.lang.startsWith('ur'));
-        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        utterLang = 'ur-PK';
       } else if (langCode === 'pa') {
         selectedVoice = voices.find(v => v.lang.startsWith('pa'));
-        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('hi'));
-        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        utterLang = 'pa-IN';
       } else {
         selectedVoice = voices.find(v => v.lang.startsWith('en'));
+        utterLang = 'en-US';
       }
+
+      if (!selectedVoice) {
+        alert('Voice not available for this language on your device. Try English instead.');
+        hideStopButton();
+        return;
+      }
+
+      if (btn) showStopOnButton(btn);
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = langCode === 'ur' ? 'ur-PK' : langCode === 'pa' ? 'pa-IN' : 'en-US';
+      utter.lang = utterLang;
       utter.rate = 0.85;
-      if (selectedVoice) utter.voice = selectedVoice;
+      utter.voice = selectedVoice;
       utter.onend = () => hideStopButton();
       utter.onerror = () => hideStopButton();
       window.speechSynthesis.speak(utter);
