@@ -158,6 +158,7 @@
             <button class="exam-translate-btn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
             <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
             <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
+            <button class="exam-translate-btn" onclick="translateQuestion('pa')"><i class="fas fa-globe"></i> Punjabi</button>
             <button class="exam-translate-btn" onclick="hideTranslation()"><i class="fas fa-times"></i> Hide</button>
           </div>
           <div class="exam-translation" id="examTranslation" style="display:none;"></div>
@@ -547,16 +548,20 @@
       }
       window.speechSynthesis.cancel();
       const voices = window.speechSynthesis.getVoices();
-      const langCode = currentTranslationLang === 'ur' ? 'ur' : 'en';
+      const langCode = currentTranslationLang;
       let selectedVoice = null;
       if (langCode === 'ur') {
         selectedVoice = voices.find(v => v.lang.startsWith('ur'));
+        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
+      } else if (langCode === 'pa') {
+        selectedVoice = voices.find(v => v.lang.startsWith('pa'));
+        if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('hi'));
         if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('en'));
       } else {
         selectedVoice = voices.find(v => v.lang.startsWith('en'));
       }
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = langCode === 'ur' ? 'ur-PK' : 'en-US';
+      utter.lang = langCode === 'ur' ? 'ur-PK' : langCode === 'pa' ? 'pa-IN' : 'en-US';
       utter.rate = 0.85;
       if (selectedVoice) utter.voice = selectedVoice;
       window.speechSynthesis.speak(utter);
