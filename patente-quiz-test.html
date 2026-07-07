@@ -156,10 +156,9 @@
           <div class="exam-question-text" id="examQText"></div>
           <div class="exam-translate-bar">
             <button class="exam-translate-btn" id="readBtn" onclick="readQuestion()"><i class="fas fa-volume-up"></i> Read</button>
-            <button class="exam-translate-btn" id="stopAudioBtn" onclick="stopAudio()" style="display:none;background:#e74c3c;color:white;border-color:#e74c3c;"><i class="fas fa-stop"></i> Stop</button>
-            <button class="exam-translate-btn" onclick="translateQuestion('en')"><i class="fas fa-globe"></i> English</button>
-            <button class="exam-translate-btn" onclick="translateQuestion('ur')"><i class="fas fa-globe"></i> Urdu</button>
-            <button class="exam-translate-btn" onclick="translateQuestion('pa')"><i class="fas fa-globe"></i> Punjabi</button>
+            <button class="exam-translate-btn" id="btn-en" onclick="translateQuestion('en', this)"><i class="fas fa-globe"></i> English</button>
+            <button class="exam-translate-btn" id="btn-ur" onclick="translateQuestion('ur', this)"><i class="fas fa-globe"></i> Urdu</button>
+            <button class="exam-translate-btn" id="btn-pa" onclick="translateQuestion('pa', this)"><i class="fas fa-globe"></i> Punjabi</button>
             <button class="exam-translate-btn" onclick="hideTranslation()"><i class="fas fa-times"></i> Hide</button>
           </div>
           <div class="exam-translation" id="examTranslation" style="display:none;"></div>
@@ -489,7 +488,7 @@
     const translationCache = {};
     let currentTranslationLang = null;
 
-    async function translateQuestion(lang) {
+    async function translateQuestion(lang, btn) {
       const q = currentQuestions[currentIndex];
       const cacheKey = q.text + '_' + lang;
       const el = document.getElementById('examTranslation');
@@ -500,7 +499,8 @@
 
       if (translationCache[cacheKey]) {
         el.className = 'exam-translation';
-        el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
+        el.innerHTML = translationCache[cacheKey] + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation(this)"><i class="fas fa-volume-up"></i> Read</button>';
+        if (btn) showStopOnButton(btn);
         return;
       }
 
@@ -511,7 +511,8 @@
         const translated = data[0].map(s => s[0]).join('');
         translationCache[cacheKey] = translated;
         el.className = 'exam-translation';
-        el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation()"><i class="fas fa-volume-up"></i> Read</button>';
+        el.innerHTML = translated + ' <button class="exam-translate-btn" style="margin-left:0.5rem;display:inline-flex;" onclick="readTranslation(this)"><i class="fas fa-volume-up"></i> Read</button>';
+        if (btn) showStopOnButton(btn);
       } catch (err) {
         el.className = 'exam-translation';
         el.textContent = 'Translation failed. Please try again.';
@@ -523,14 +524,32 @@
       currentTranslationLang = null;
     }
 
-    function showStopButton() {
-      document.getElementById('readBtn').style.display = 'none';
-      document.getElementById('stopAudioBtn').style.display = 'inline-flex';
+    let activeAudioBtn = null;
+
+    function showStopOnButton(btn) {
+      stopAudio();
+      activeAudioBtn = btn;
+      btn.dataset.originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+      btn.style.background = '#e74c3c';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#e74c3c';
+      btn.onclick = stopAudio;
     }
 
     function hideStopButton() {
-      document.getElementById('readBtn').style.display = 'inline-flex';
-      document.getElementById('stopAudioBtn').style.display = 'none';
+      if (activeAudioBtn) {
+        activeAudioBtn.innerHTML = activeAudioBtn.dataset.originalHtml;
+        activeAudioBtn.style.background = '';
+        activeAudioBtn.style.color = '';
+        activeAudioBtn.style.borderColor = '';
+        const lang = activeAudioBtn.dataset.lang;
+        if (lang === 'en') activeAudioBtn.onclick = () => translateQuestion('en');
+        else if (lang === 'ur') activeAudioBtn.onclick = () => translateQuestion('ur');
+        else if (lang === 'pa') activeAudioBtn.onclick = () => translateQuestion('pa');
+        else activeAudioBtn.onclick = readQuestion;
+        activeAudioBtn = null;
+      }
     }
 
     function stopAudio() {
@@ -546,7 +565,7 @@
         return;
       }
       window.speechSynthesis.cancel();
-      showStopButton();
+      showStopOnButton(document.getElementById('readBtn'));
       const voices = window.speechSynthesis.getVoices();
       const itVoice = voices.find(v => v.lang.startsWith('it'));
       const q = currentQuestions[currentIndex];
@@ -559,7 +578,7 @@
       window.speechSynthesis.speak(utter);
     }
 
-    function readTranslation() {
+    function readTranslation(btn) {
       if (!currentTranslationLang) return;
       const q = currentQuestions[currentIndex];
       const cacheKey = q.text + '_' + currentTranslationLang;
@@ -571,7 +590,7 @@
         return;
       }
       window.speechSynthesis.cancel();
-      showStopButton();
+      if (btn) showStopOnButton(btn);
       const voices = window.speechSynthesis.getVoices();
       const langCode = currentTranslationLang;
       let selectedVoice = null;
