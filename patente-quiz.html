@@ -547,8 +547,8 @@
         return;
       }
 
-      showStopButton();
       setTimeout(() => {
+        showStopButton();
         const utter = new SpeechSynthesisUtterance(q.text);
         utter.lang = 'it-IT';
         utter.rate = 0.9;
@@ -556,7 +556,7 @@
         utter.onend = () => hideStopButton();
         utter.onerror = () => hideStopButton();
         window.speechSynthesis.speak(utter);
-      }, 150);
+      }, 200);
     }
 
     function readTranslation() {
@@ -593,8 +593,8 @@
       }
 
       window.speechSynthesis.cancel();
-      showStopButton();
       setTimeout(() => {
+        showStopButton();
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = utterLang;
         utter.rate = 0.85;
@@ -602,7 +602,7 @@
         utter.onend = () => hideStopButton();
         utter.onerror = () => hideStopButton();
         window.speechSynthesis.speak(utter);
-      }, 150);
+      }, 200);
     }
 
     if ('speechSynthesis' in window) {
