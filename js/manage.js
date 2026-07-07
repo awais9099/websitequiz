@@ -871,26 +871,26 @@ const TOPIC_MAP = {
   'segnali-divieto': { title: 'Segnali di divieto', blockNumber: 3 },
   'segnali-obbligo': { title: "Segnali d'obbligo", blockNumber: 4 },
   'segnali-precedenza': { title: 'Segnali di precedenza', blockNumber: 5 },
-  'segnaletica-orizzontale': { title: 'Segnaletica orizzontale', blockNumber: 6 },
-  'segnalazioni-semaforiche': { title: 'Segnalazioni semaforiche', blockNumber: 7 },
+  'segnaletica-orizzontale-ostacoli': { title: 'Segnaletica orizzontale e ostacoli', blockNumber: 6 },
+  'semafori-vigili': { title: 'Segnalazioni semaforiche e agenti', blockNumber: 7 },
   'segnali-indicazione': { title: 'Segnali di indicazione', blockNumber: 8 },
-  'segnali-complementari': { title: 'Segnali complementari e temporanei', blockNumber: 9 },
+  'segnali-complementari-cantiere': { title: 'Segnali complementari e cantiere', blockNumber: 9 },
   'pannelli-integrativi': { title: 'Pannelli integrativi', blockNumber: 10 },
-  'limiti-velocita': { title: 'Limiti di velocita', blockNumber: 11 },
-  'distanza-sicurezza': { title: 'Distanza di sicurezza', blockNumber: 12 },
-  'norme-circolazione': { title: 'Norme sulla circolazione', blockNumber: 13 },
-  'precedenza': { title: 'Esempi di precedenza', blockNumber: 14 },
+  'limiti-di-velocita': { title: 'Limiti di velocita', blockNumber: 11 },
+  'distanza-di-sicurezza': { title: 'Distanza di sicurezza', blockNumber: 12 },
+  'norme-di-circolazione': { title: 'Norme sulla circolazione', blockNumber: 13 },
+  'precedenza-incroci': { title: 'Esempi di precedenza', blockNumber: 14 },
   'sorpasso': { title: 'Norme sul sorpasso', blockNumber: 15 },
-  'fermata-sosta': { title: 'Fermata, sosta, arresto', blockNumber: 16 },
-  'norme-varie': { title: 'Norme varie', blockNumber: 17 },
-  'luci-dispositivi': { title: 'Uso delle luci', blockNumber: 18 },
-  'sicurezza': { title: 'Cinture e sicurezza', blockNumber: 19 },
-  'patenti-documenti': { title: 'Patenti e documenti', blockNumber: 20 },
-  'incidenti': { title: 'Incidenti stradali', blockNumber: 21 },
-  'guida-condizioni': { title: 'Guida e condizioni fisiche', blockNumber: 22 },
-  'responsabilita': { title: 'Responsabilita e assicurazione', blockNumber: 23 },
-  'ambiente': { title: 'Ambiente e inquinamento', blockNumber: 24 },
-  'veicolo': { title: 'Elementi del veicolo', blockNumber: 25 }
+  'fermata-sosta-arresto': { title: 'Fermata, sosta, arresto', blockNumber: 16 },
+  'norme-varie-autostrade-pannelli': { title: 'Norme varie, autostrade, pannelli', blockNumber: 17 },
+  'luci-dispositivi-acustici': { title: 'Luci e dispositivi acustici', blockNumber: 18 },
+  'cinture-casco-sicurezza': { title: 'Cinture, casco e sicurezza', blockNumber: 19 },
+  'patente-punti-documenti': { title: 'Patente, punti e documenti', blockNumber: 20 },
+  'incidenti-stradali-comportamenti': { title: 'Incidenti stradali', blockNumber: 21 },
+  'alcool-droga-primo-soccorso': { title: 'Alcool, droga e primo soccorso', blockNumber: 22 },
+  'responsabilita-civile-penale-e-assicurazione': { title: 'Responsabilita e assicurazione', blockNumber: 23 },
+  'consumi-ambiente-inquinamento': { title: 'Consumi e ambiente', blockNumber: 24 },
+  'elementi-veicolo-manutenzione-comportamenti': { title: 'Elementi del veicolo', blockNumber: 25 }
 };
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/Ed0ardo/QuizPatenteB/main';
@@ -916,9 +916,7 @@ async function importOpenSourceQuizzes() {
     let totalQ = 0;
 
     for (const [topicKey, subTopics] of Object.entries(data)) {
-      const mapping = Object.values(TOPIC_MAP).find(t =>
-        topicKey.toLowerCase().includes(t.title.toLowerCase().split(' ')[0])
-      ) || { title: topicKey, blockNumber: 99 };
+      const mapping = TOPIC_MAP[topicKey] || { title: topicKey, blockNumber: 99 };
 
       const questions = [];
       for (const [subKey, qList] of Object.entries(subTopics)) {
