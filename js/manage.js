@@ -261,92 +261,113 @@ async function resetStudentPassword(email) {
 }
 
 // ===== GROUPS =====
-async function loadGroups() {
+let currentGroupFilter = 'active';
+
+function toggleGroupFilter(filter, btn) {
+  currentGroupFilter = filter;
+  document.querySelectorAll('#tab-groups .student-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGroups();
+}
+
+async function renderGroups() {
   const container = document.getElementById('groupsContainer');
   const noGroups = document.getElementById('noGroups');
-  try {
-    allGroups = await getGroups();
-    if (allGroups.length === 0) {
-      container.innerHTML = '';
-      noGroups.style.display = 'block';
-      return;
-    }
-    noGroups.style.display = 'none';
-    const sorted = allGroups.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    container.innerHTML = '';
-    for (const group of sorted) {
-      const sections = await getSections(group.id);
-      const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
-      let sectionsHtml = '';
-      for (const sec of sortedSections) {
-        const videos = await getVideos(sec.id);
-        const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
-        const videosHtml = sortedVideos.map(v => `
-          <div class="video-item">
-            <div class="video-item-info">
-              ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-thumb" onerror="this.style.display='none'">` : '<div class="video-thumb"></div>'}
-              <div class="video-item-details">
-                <strong>${v.title}</strong>
-                <span class="video-topics">${v.topics || ''}</span>
-              </div>
+  container.innerHTML = '';
+
+  const filtered = allGroups.filter(g => {
+    if (currentGroupFilter === 'active') return !g.isArchived;
+    if (currentGroupFilter === 'archived') return g.isArchived;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    noGroups.style.display = 'block';
+    return;
+  }
+
+  noGroups.style.display = 'none';
+  const sorted = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  for (const group of sorted) {
+    const sections = await getSections(group.id);
+    const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+    let sectionsHtml = '';
+    for (const sec of sortedSections) {
+      const videos = await getVideos(sec.id);
+      const sortedVideos = videos.sort((a, b) => (a.order || 0) - (b.order || 0));
+      const videosHtml = sortedVideos.map(v => `
+        <div class="video-item">
+          <div class="video-item-info">
+            ${v.thumbnail ? `<img src="${v.thumbnail}" class="video-thumb" onerror="this.style.display='none'">` : '<div class="video-thumb"></div>'}
+            <div class="video-item-details">
+              <strong>${v.title}</strong>
+              <span class="video-topics">${v.topics || ''}</span>
             </div>
+          </div>
+          <div class="group-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editVideo('${v.id}','${group.id}','${sec.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="deleteVideoConfirm('${v.id}','${group.id}')"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+      sectionsHtml += `
+        <div class="section-card">
+          <div class="section-header">
+            <h4><i class="fas fa-list"></i> ${sec.title}</h4>
             <div class="group-actions">
-              <button class="btn btn-secondary btn-sm" onclick="editVideo('${v.id}','${group.id}','${sec.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-danger btn-sm" onclick="deleteVideoConfirm('${v.id}','${group.id}')"><i class="fas fa-trash"></i></button>
+              <button class="btn btn-primary btn-xs" onclick="openVideoModal('${group.id}','${sec.id}')"><i class="fas fa-plus"></i> Video</button>
+              <button class="btn btn-secondary btn-xs" onclick="editSection('${sec.id}','${group.id}')"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-xs" onclick="deleteSectionConfirm('${sec.id}','${group.id}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>
-        `).join('');
-        sectionsHtml += `
-          <div class="section-card">
-            <div class="section-header">
-              <h4><i class="fas fa-list"></i> ${sec.title}</h4>
-              <div class="group-actions">
-                <button class="btn btn-primary btn-xs" onclick="openVideoModal('${group.id}','${sec.id}')"><i class="fas fa-plus"></i> Video</button>
-                <button class="btn btn-secondary btn-xs" onclick="editSection('${sec.id}','${group.id}')"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger btn-xs" onclick="deleteSectionConfirm('${sec.id}','${group.id}')"><i class="fas fa-trash"></i></button>
-              </div>
-            </div>
-            <div class="section-body">
-              ${sortedVideos.length === 0 ? '<p style="color:var(--text-light);font-size:0.85rem;text-align:center;padding:0.5rem;">No videos yet</p>' : videosHtml}
-            </div>
-          </div>
-        `;
-      }
-      const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
-      const isArchived = group.isArchived || false;
-      const groupStudents = allStudents.filter(s => {
-        const gIds = s.groupIds || (s.groupId ? [s.groupId] : []);
-        return gIds.includes(group.id);
-      });
-      const hasInactive = groupStudents.some(s => !s.isActive);
-      const archivedClass = isArchived ? 'group-archived' : '';
-      const inactiveClass = hasInactive && !isArchived ? 'group-has-inactive' : '';
-      container.innerHTML += `
-        <div class="group-card ${archivedClass} ${inactiveClass}">
-          <div class="group-header" onclick="toggleGroupBody(this)">
-            <h3>
-              <i class="fas fa-layer-group"></i> ${group.name}
-              <span class="group-level course-badge ${badgeClass}">${group.level}</span>
-              ${isArchived ? '<span class="group-status-badge archived"><i class="fas fa-archive"></i> Archived</span>' : ''}
-              ${hasInactive && !isArchived ? '<span class="group-status-badge inactive"><i class="fas fa-user-slash"></i> Has inactive students</span>' : ''}
-            </h3>
-            <div class="group-actions">
-              <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();openSectionModal('${group.id}')"><i class="fas fa-plus"></i> Section</button>
-              <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editGroup('${group.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn btn-xs" style="background:#e67e22;color:white;" onclick="event.stopPropagation();deactivateGroup('${group.id}')" title="Deactivate all students in this group"><i class="fas fa-user-slash"></i></button>
-              <button class="btn btn-xs" style="background:${isArchived ? '#27ae60' : '#7f8c8d'};color:white;" onclick="event.stopPropagation();toggleArchiveGroup('${group.id}', ${!isArchived})" title="${isArchived ? 'Unarchive' : 'Archive'} group"><i class="fas fa-${isArchived ? 'undo' : 'archive'}"></i></button>
-              <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteGroupConfirm('${group.id}')"><i class="fas fa-trash"></i></button>
-              <i class="fas fa-chevron-down" style="color:var(--text-light);transition:transform 0.3s;"></i>
-            </div>
-          </div>
-          <div class="group-body" style="display:${isArchived ? 'none' : 'block'};">
-            ${sortedSections.length === 0 ? '<p style="color:var(--text-light);text-align:center;padding:1rem;">No sections yet. Add a section to organize videos.</p>' : sectionsHtml}
+          <div class="section-body">
+            ${sortedVideos.length === 0 ? '<p style="color:var(--text-light);font-size:0.85rem;text-align:center;padding:0.5rem;">No videos yet</p>' : videosHtml}
           </div>
         </div>
       `;
     }
+    const badgeClass = group.level === 'patente' ? 'badge-patente' : `badge-${group.level.toLowerCase()}`;
+    const isArchived = group.isArchived || false;
+    const groupStudents = allStudents.filter(s => {
+      const gIds = s.groupIds || (s.groupId ? [s.groupId] : []);
+      return gIds.includes(group.id);
+    });
+    const hasInactive = groupStudents.some(s => !s.isActive);
+    const archivedClass = isArchived ? 'group-archived' : '';
+    const inactiveClass = hasInactive && !isArchived ? 'group-has-inactive' : '';
+    container.innerHTML += `
+      <div class="group-card ${archivedClass} ${inactiveClass}">
+        <div class="group-header" onclick="toggleGroupBody(this)">
+          <h3>
+            <i class="fas fa-layer-group"></i> ${group.name}
+            <span class="group-level course-badge ${badgeClass}">${group.level}</span>
+            ${isArchived ? '<span class="group-status-badge archived"><i class="fas fa-archive"></i> Archived</span>' : ''}
+            ${hasInactive && !isArchived ? '<span class="group-status-badge inactive"><i class="fas fa-user-slash"></i> Has inactive students</span>' : ''}
+          </h3>
+          <div class="group-actions">
+            <button class="btn btn-primary btn-xs" onclick="event.stopPropagation();openSectionModal('${group.id}')"><i class="fas fa-plus"></i> Section</button>
+            <button class="btn btn-secondary btn-xs" onclick="event.stopPropagation();editGroup('${group.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-xs" style="background:#e67e22;color:white;" onclick="event.stopPropagation();deactivateGroup('${group.id}')" title="Deactivate all students in this group"><i class="fas fa-user-slash"></i></button>
+            <button class="btn btn-xs" style="background:${isArchived ? '#27ae60' : '#7f8c8d'};color:white;" onclick="event.stopPropagation();toggleArchiveGroup('${group.id}', ${!isArchived})" title="${isArchived ? 'Unarchive' : 'Archive'} group"><i class="fas fa-${isArchived ? 'undo' : 'archive'}"></i></button>
+            <button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteGroupConfirm('${group.id}')"><i class="fas fa-trash"></i></button>
+            <i class="fas fa-chevron-down" style="color:var(--text-light);transition:transform 0.3s;"></i>
+          </div>
+        </div>
+        <div class="group-body" style="display:none;">
+          ${sortedSections.length === 0 ? '<p style="color:var(--text-light);text-align:center;padding:1rem;">No sections yet. Add a section to organize videos.</p>' : sectionsHtml}
+        </div>
+      </div>
+    `;
+  }
+}
+
+async function loadGroups() {
+  try {
+    allGroups = await getGroups();
+    renderGroups();
   } catch (err) {
-    container.innerHTML = `<p style="color:var(--danger);text-align:center;padding:2rem;">Error loading groups: ${err.message}</p>`;
+    document.getElementById('groupsContainer').innerHTML = `<p style="color:var(--danger);text-align:center;padding:2rem;">Error loading groups: ${err.message}</p>`;
   }
 }
 
@@ -393,8 +414,9 @@ async function toggleArchiveGroup(groupId, archive) {
 
   try {
     await firebaseDb.collection('groups').doc(groupId).update({ isArchived: archive });
+    group.isArchived = archive;
     showToast('Group ' + action + 'd', 'success');
-    loadGroups();
+    renderGroups();
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   }

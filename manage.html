@@ -120,7 +120,13 @@
           <i class="fas fa-plus"></i> Add Group
         </button>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1.5rem;">Manage course groups. Each group has sections (weeks) with videos. Students are assigned to a specific group.</p>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:1rem;">Manage course groups. Each group has sections (weeks) with videos. Students are assigned to a specific group.</p>
+
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+        <button class="btn btn-sm student-filter active" id="showActiveBtn" onclick="toggleGroupFilter('active', this)">Active</button>
+        <button class="btn btn-sm student-filter" id="showArchivedBtn" onclick="toggleGroupFilter('archived', this)">Archived</button>
+        <button class="btn btn-sm student-filter" id="showAllGroupsBtn" onclick="toggleGroupFilter('all', this)">All</button>
+      </div>
 
       <div id="groupsContainer"></div>
       <p id="noGroups" style="text-align:center;color:var(--text-light);padding:2rem;display:none;">No groups created yet.</p>
